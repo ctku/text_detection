@@ -30,10 +30,8 @@
 #include <string.h>
 #include <math.h>
 
-/*
- *	Determine the convex hull of a set of points
- *		The points are in the plane
- */
+#define min(X,Y)	((X) < (Y) ? (X) : (Y))
+#define max(X,Y)	((X) > (Y) ? (X) : (Y))
 
 struct point {
 	int x;
@@ -41,6 +39,73 @@ struct point {
 };
 
 typedef point p2d_t;
+
+/* Stack of points */
+struct p_node {
+	p2d_t point;
+	p_node* next;
+};
+
+typedef struct p_node p_node_t;
+
+struct stack {
+	int size;
+	p_node_t* top;
+	p_node_t* bottom;
+};
+
+typedef struct stack p_stack_t;
+
+p_stack_t* s_init() {
+	p_stack_t* newStack = (p_stack_t*)malloc(sizeof(*newStack));
+	newStack->top = newStack->bottom = NULL;
+	newStack->size = 0;
+	return newStack;
+}	
+
+p2d_t* pop(p_stack_t* stack) {
+	if(!stack->size)
+		return NULL;
+	p_node* temp = stack->top;
+	p2d_t* toReturn = (p2d_t*)malloc(sizeof(*toReturn));
+	*toReturn = stack->top->point;
+	stack->top = stack->top->next;
+	free(temp);
+	stack->size--;
+	return toReturn;
+}
+
+void push(p_stack_t* stack, p2d_t point) {
+	p_node_t* temp;
+	if(stack->top) {
+		temp = stack->top;
+		stack->top = (p_node_t*)malloc(sizeof(p_node_t));
+		stack->top->point = point;
+		stack->top->next = temp;
+	} else {
+		stack->top = stack->bottom = (p_node_t*)malloc(sizeof(p_node_t));
+		stack->top->next = NULL;
+		stack->top->point = point;
+	}
+	stack->size++;
+}
+
+p2d_t* top(p_stack_t* stack) {
+	if(!stack->size)
+		return NULL;
+	return &stack->top->point;
+}
+
+p2d_t* next_to_top(p_stack_t* stack) {
+	if(stack->size<2)
+		return NULL;
+	return &stack->top->next->point;
+}
+
+/*
+ *	Determine the convex hull of a set of points
+ *		The points are in the plane
+ */
 
 /* positive, pj is left of [pi, pk] */
 float direction(p2d_t pi, p2d_t pj, p2d_t pk) {
@@ -76,21 +141,21 @@ char intersection(p2d_t p1, p2d_t p2, p2d_t p3, p2d_t p4) {
 }
 /* Sort points[p...r] by the polar angle made with origin p0 */
 p2d_t* polar_angle_sort(p2d_t* p0, p2d_t* points, int p, int r) {
-	int i, j, k;
+	int i=0, j=0, k=0;
 	int piv; 
 	if(r-p<=1)
-		return;
-	p2d_t* g = malloc((r-p+1)*sizeof(*g));
-	p2d_t* l = malloc((r-p+1)*sizeof(*l));
-	float v1 = direction(p0, points[p], points[floor(p+r)/2])
-	float v2 = direction(p0, points[floor(p+r)/2], points[r]);
-	float v3 = direction(p0, points[p], points[r]);
-	piv = v1>v2?(v2>v3?p:r):(v2>v3?floor(p+r)/2:r);
-	val_piv = points[piv];
+		return 0;
+	p2d_t* g = (p2d_t*)malloc((r-p+1)*sizeof(*g));
+	p2d_t* l = (p2d_t*)malloc((r-p+1)*sizeof(*l));
+	float v1 = direction(*p0, points[p], points[(int)floor(float(p+r)/2)]);
+	float v2 = direction(*p0, points[(int)floor(float(p+r)/2)], points[r]);
+	float v3 = direction(*p0, points[p], points[r]);
+	piv = v1>v2?(v2>v3?p:r):(v2>v3?floor(float(p+r)/2):r);
+	p2d_t val_piv = points[piv-1];
 	for(i=p;i<=r;i++) {
 		if(i==piv)
 			continue;
-		if(direction(p0, val_piv, points[i])>0)
+		if(direction(*p0, val_piv, points[i])>0)
 			l[j++] = points[i];
 		else
 			g[k++] = points[i];
@@ -117,96 +182,45 @@ void convex_hull(p2d_t* points, int n, p2d_t* hull, int* hull_size) {
 	for(i=min_pos;i<n-1;i++)
 		points[i] = points[i+1];
 	n--;
-	points = polar_angle_sort(p0, points, 0, n);
+	points = polar_angle_sort(&p0, points, 0, n);
 	p_stack_t* qPoints = s_init();
 	push(qPoints, p0);
 	push(qPoints, points[0]);
 	push(qPoints, points[1]);
 	for(i=2;i<n;i++) {
-		while(direction(next_to_top(qPoints), top(qPoints), points[i])<0)
+		while(direction(*next_to_top(qPoints), *top(qPoints), points[i])<0)
 			pop(qPoints);
 		push(qPoints, points[i]);
 	}
 	p2d_t* point;
 	*hull_size = 0;
 	while(point = pop(qPoints))
-		hull[hull_size++] = *point;
-}
-
-
-
-/* Stack of points */
-struct p_node {
-	p2d_t point;
-	p_node* next;
-};
-
-typedef struct p_node p_node_t;
-
-struct stack {
-	int size;
-	p_node_t* top;
-	p_node_t* bottom;
-};
-
-typedef struct stack p_stack_t;
-
-p_stack_t* s_init() {
-	p_stack_t* newStack = malloc(sizeof(*newStack));
-	newStack->top = newStack->bottom = NULL;
-	newStack->size = 0;
-	return newStack;
-}	
-
-p2d_t* pop(p_stack_t* stack) {
-	if(!stack->size)
-		return NULL;
-	p_node* temp = stack->top;
-	p2d_t* toReturn = malloc(sizeof(*toReturn));
-	*toReturn = stack->top->point;
-	stack->top = stack->top->next;
-	free(temp);
-	stack->size--;
-	return toReturn;
-}
-
-void push(p_stack_t* stack, p2d_t point) {
-	p_node_t* temp;
-	if(stack->top) {
-		temp = stack->top;
-		stack->top = malloc(sizeof(p_node_t));
-		stack->top->point = point;
-		stack->top->next = temp;
-	} else {
-		stack->top = stack->bottom = malloc(sizeof(p_node_t));
-		stack->top->next = NULL;
-		stack->top->point = point;
-	}
-	stack->size++;
-}
-
-p2d_t* top(p_stack_t* stack) {
-	if(!stack->size)
-		return NULL;
-	return &stack->top->point;
-}
-
-p2d_t* next_to_top(p_stack_t* stack) {
-	if(stack->size<2)
-		return NULL;
-	return &stack->top->next->point;
+		hull[*(hull_size++)] = *point;
 }
 
 #ifndef MATLAB
 int main(void)
 {
-	u8 img_cum[15] = {0,0,0,0,0,
-                      0,0,0,0,0,
-					  0,0,0,0,0};
-	u8 img_new[15] = {1,0,1,1,1,
-                      0,0,1,0,1,
-					  0,1,1,1,1};
-	//int out = imfeat_eulerno_change_algo(img_new, img_cum, 3, 5);
+	u8 img_cum[15] = {0,0,1,0,0,
+                      0,0,1,0,0,
+					  1,1,1,1,1};
+	int w = 5, h = 3;
+	p2d_t *points = (p2d_t*)malloc(sizeof(p2d_t *)*w*h);
+	p2d_t *hull = (p2d_t*)malloc(sizeof(p2d_t *)*w*h);
+	memset(points, 0, sizeof(p2d_t *)*w*h);
+	memset(hull, 0, sizeof(p2d_t *)*w*h);
+	int n = 0;
+	for (int i=0; i<h; i++) {
+		for (int j=0; j<w; j++) {
+			if (img_cum[i*w+j]==1) {
+				points[n].x = j;
+				points[n].y = i;
+				n = n + 1;
+			}
+		}
+	}
+	int hull_size = 0;
+	convex_hull(points, n, hull, &hull_size);
 
 	return 0;
 }
