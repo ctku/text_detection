@@ -1,0 +1,8 @@
+ HM      41      39       45
+
+               168F(V)
+               169F(V)
+
+
+
+text_detect_a1_1stStage_ftExtract_ICDAR2003_general(0,0,'0203_test1_nonc_mat',{2000,'20130203'},'F001N')

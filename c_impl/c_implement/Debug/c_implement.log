@@ -1,0 +1,64 @@
+﻿Build started 2013/2/13 上午 10:50:45.
+     1>Project "D:\Dropbox\KCD_Research\Codes\c_implement\c_implement\c_implement.vcxproj" on node 2 (build target(s)).
+     1>InitializeBuildStatus:
+         Touching "Debug\c_implement.unsuccessfulbuild".
+       ClCompile:
+         d:\Program Files\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt ..\source_code\imfeat_binary_get_convexhull_c.cpp
+         imfeat_binary_get_convexhull_c.cpp
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(47): warning C4244: 'return' : conversion from 'int' to 'float', possible loss of data
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(51): error C3861: 'min': identifier not found
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(51): error C3861: 'max': identifier not found
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(52): error C3861: 'min': identifier not found
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(52): error C3861: 'max': identifier not found
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(82): error C2561: 'polar_angle_sort' : function must return a value
+                 d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(78) : see declaration of 'polar_angle_sort'
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(83): error C2440: 'initializing' : cannot convert from 'void *' to 'p2d_t *'
+                 Conversion from 'void*' to pointer to non-'void' requires an explicit cast
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(84): error C2440: 'initializing' : cannot convert from 'void *' to 'p2d_t *'
+                 Conversion from 'void*' to pointer to non-'void' requires an explicit cast
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(85): error C2668: 'floor' : ambiguous call to overloaded function
+                 d:\program files\microsoft visual studio 10.0\vc\include\math.h(567): could be 'long double floor(long double)'
+                 d:\program files\microsoft visual studio 10.0\vc\include\math.h(519): or       'float floor(float)'
+                 d:\program files\microsoft visual studio 10.0\vc\include\math.h(136): or       'double floor(double)'
+                 while trying to match the argument list '(int)'
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(85): error C2664: 'direction' : cannot convert parameter 1 from 'p2d_t *' to 'p2d_t'
+                 No constructor could take the source type, or constructor overload resolution was ambiguous
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(86): error C2144: syntax error : 'float' should be preceded by ';'
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(86): error C2668: 'floor' : ambiguous call to overloaded function
+                 d:\program files\microsoft visual studio 10.0\vc\include\math.h(567): could be 'long double floor(long double)'
+                 d:\program files\microsoft visual studio 10.0\vc\include\math.h(519): or       'float floor(float)'
+                 d:\program files\microsoft visual studio 10.0\vc\include\math.h(136): or       'double floor(double)'
+                 while trying to match the argument list '(int)'
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(86): error C2664: 'direction' : cannot convert parameter 1 from 'p2d_t *' to 'p2d_t'
+                 No constructor could take the source type, or constructor overload resolution was ambiguous
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(87): error C2664: 'direction' : cannot convert parameter 1 from 'p2d_t *' to 'p2d_t'
+                 No constructor could take the source type, or constructor overload resolution was ambiguous
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(88): error C2668: 'floor' : ambiguous call to overloaded function
+                 d:\program files\microsoft visual studio 10.0\vc\include\math.h(567): could be 'long double floor(long double)'
+                 d:\program files\microsoft visual studio 10.0\vc\include\math.h(519): or       'float floor(float)'
+                 d:\program files\microsoft visual studio 10.0\vc\include\math.h(136): or       'double floor(double)'
+                 while trying to match the argument list '(int)'
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(89): error C2065: 'val_piv' : undeclared identifier
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(93): error C2065: 'val_piv' : undeclared identifier
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(102): error C2065: 'val_piv' : undeclared identifier
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(120): error C2664: 'polar_angle_sort' : cannot convert parameter 1 from 'p2d_t' to 'p2d_t *'
+                 No user-defined-conversion operator available that can perform this conversion, or the operator cannot be called
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(121): error C2065: 'p_stack_t' : undeclared identifier
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(121): error C2065: 'qPoints' : undeclared identifier
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(121): error C3861: 's_init': identifier not found
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(122): error C2065: 'qPoints' : undeclared identifier
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(122): error C3861: 'push': identifier not found
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(123): error C2065: 'qPoints' : undeclared identifier
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(123): error C3861: 'push': identifier not found
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(124): error C2065: 'qPoints' : undeclared identifier
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(124): error C3861: 'push': identifier not found
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(126): error C2065: 'qPoints' : undeclared identifier
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(126): error C2065: 'qPoints' : undeclared identifier
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(126): error C3861: 'next_to_top': identifier not found
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(126): error C3861: 'top': identifier not found
+     1>d:\dropbox\kcd_research\codes\c_implement\source_code\imfeat_binary_get_convexhull_c.cpp(126): fatal error C1903: unable to recover from previous error(s); stopping compilation
+     1>Done Building Project "D:\Dropbox\KCD_Research\Codes\c_implement\c_implement\c_implement.vcxproj" (build target(s)) -- FAILED.
+
+Build FAILED.
+
+Time Elapsed 00:00:01.22

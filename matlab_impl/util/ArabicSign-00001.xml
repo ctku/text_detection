@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--GEDI was developed at Language and Media Processing Laboratory, University of Maryland.-->
+<!--                                                                                       -->
+<!-- Dataset Constructed and Annotated by Applied Media Analysis, Inc.                     -->
+<!-- Contact AMA Representatives for Licensing Options                                     -->
+<!--                                                                                       -->
+<GEDI xmlns="http://lamp.cfar.umd.edu/media/projects/GEDI/" GEDI_date="12/09/2011" GEDI_version="2.3.19">
+	<DL_DOCUMENT NrOfPages="1" docTag="xml" src="ArabicSign-00001.jpg">
+		<DL_PAGE gedi_type="DL_PAGE" height="1600" pageID="1" src="ArabicSign-00001.jpg" width="1200">
+			<DL_ZONE contents="المجمع الإسلامي الكبير" gedi_type="TEXTLINE" id="1" language="ARABIC" polygon="(352,909);(929,909);(928,958);(816,968);(352,970)" segmentation="word"> </DL_ZONE>
+			<DL_ZONE contents="مسجد الحبيب المصطفى" gedi_type="TEXTLINE" id="2" language="ARABIC" polygon="(329,817);(1021,817);(1021,893);(329,893)" segmentation="word"> </DL_ZONE>
+			<DL_ZONE contents="إنما يَعمُر مَسَاجدَ الله مَن آمنَ بالله وَاليَوم الآخِر" gedi_type="TEXTLINE" id="3" language="ARABIC" polygon="(245,726);(656,728);(665,718);(825,728);(991,716);(1010,751);(1009,796);(245,796)" segmentation="word"> </DL_ZONE>
+			<DL_ZONE contents="بسم الله الرَحمن الرَحيم" gedi_type="TEXTLINE" id="5" language="ARABIC" polygon="(423,678);(828,678);(828,723);(664,715);(647,721);(423,723)" segmentation="word"> </DL_ZONE>
+			<DL_ZONE contents="صَلى الله عَلَية وَسَلم" gedi_type="TEXTLINE" id="6" language="ARABIC" line_style="MULTIPLE" polygon="(235,814);(324,814);(324,881);(235,881)"> </DL_ZONE>
+			<DL_ZONE contents="تعمان" gedi_type="TEXTLINE" id="7" language="ARABIC" polygon="(220,947);(263,947);(263,972);(220,972)"> </DL_ZONE>
+		</DL_PAGE>
+	</DL_DOCUMENT>
+</GEDI>
