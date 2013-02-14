@@ -331,6 +331,14 @@ switch feat_name
         r1 = imfeat('compute_feature_raw_hzcrossing_incrementally', extra, im);
         assert(sum(r1.feat_raw==[2 4 4 2])==4);
 
+        % convex hull
+        I = [0 0 1 0 0;
+             0 1 1 1 0;
+             1 1 1 1 1];
+        im = imfeat('set_image', uint8(I), im);
+        r = imfeat('extract_feature_raw_convexhull_all', '', im);
+        assert(r.feat_raw==4);
+        
         result = 1;
            
     otherwise

@@ -31,6 +31,8 @@ switch cmd1
           'extract_feature_raw_hzcrossing_slicemedian', ...
           'compute_feature_raw_hzcrossing_incrementally'}
         param.feat_raw = imfeat_hzcrossing_algo(param.image, cmd1, cmd2);
+    case {'extract_feature_raw_convexhull_all'}
+        param.feat_raw = imfeat_convexhull_algo(param.image, cmd1, cmd2);
     otherwise
         warning('Unsupport cmd: %s',cmd1);
 end
@@ -449,3 +451,10 @@ end
 
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function [out] = imfeat_convexhull_algo(I, cmd1, cmd2)
+
+out = imfeat_binary_get_convexhull_c(I');
+
+end

@@ -73,8 +73,12 @@
 //#define debug_print(fmt, ...) \
 //	do { if (DEBUG) fprintf(stderr, fmt, __VA_ARGS__); } while (0)
 #define debug_print if(debug)printf //printf
+#define cor2idx(x,y,w)	(x+(y)*(w))
+typedef unsigned char u8;
+typedef unsigned short int u16;
+typedef unsigned long int u32;
 
-#define USE_OPENCV 0
+#define USE_OPENCV 1
 #if USE_OPENCV
 
 #include <opencv2/core/core.hpp>

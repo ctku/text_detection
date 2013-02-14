@@ -29,6 +29,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define cor2idx(x,y,w)	(x+(y)*(w))
+typedef unsigned char u8;
+typedef unsigned short int u16;
+typedef unsigned long int u32;
+
 int imfeat_eulerno_change_algo(u8 *img_new, u8 *img_cum, int img_rows, int img_cols)
 {
 	// new_img: newly-added binary map

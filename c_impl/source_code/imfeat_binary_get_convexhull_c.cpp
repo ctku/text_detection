@@ -2,14 +2,13 @@
 
 /*=================================================================
  * 
- * version: 01/26/2013 21:33
+ * version: 02/14/2013 11:29
  *
- * Matlab: [out] = imfeat_binary_get_eulerno_c(new, cum)
+ * Matlab: [out] = imfeat_binary_get_convexhull_c(img)
  *
- * Input - new (u8 array): newly-added binary map (see ps.1)
- *       - cum (u8 array): accumulated binary map (see ps.1)
+ * Input - img (u8 array): newly-added binary map (see ps.1)
  *           
- * Output - out (int): change of eulerno
+ * Output - out (double): size of convex hull
  *
  * ps.1: Rember to have an transpose on this parameter when calling in Matlab, 
  *       to compensate the different memory layout between Matlab & C.
@@ -28,197 +27,269 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <iostream>
+#include <fstream>
+#include <utility>
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <time.h>
+#include <math.h>
 
-typedef struct 
-{
-        double x;
-        double y;
-} point_t;
+using namespace std;
 
-int jarvis(point_t *cloud, int n);
-int graham(point_t *cloud, int n);
+//#include <opencv2/opencv.hpp>
+//using namespace cv;
 
-static point_t base;
+typedef unsigned char u8;
+typedef unsigned short int u16;
+typedef unsigned long int u32;
 
-int is_inside_segment (point_t *p0, point_t *p1, point_t *p2)
-{
-	if ((p1->x < p2->x) && (p0->x >= p1->x) && (p0->x <= p2->x)) return 1;
-	if ((p1->x > p2->x) && (p0->x <= p1->x) && (p0->x >= p2->x)) return 1;
-	if ((p1->y < p2->y) && (p0->y >= p1->y) && (p0->y <= p2->y)) return 1;
-	if ((p1->y > p2->y) && (p0->y <= p1->y) && (p0->y >= p2->y)) return 1;
+class plane{
+protected:
+  //member variables
+  vector< pair<int, int> > points; //contains points
+  //member functions
+public:
+  void set_points(int *x, int *y, int n); //loads file of points
+  //pre: a txt file, first line number of points, rest lines points
+  //post: nothing returned
+};
 
-    return 0;
+class hull:public plane{
+public:
+  hull(){};
+  //member variables
+  vector<pair <int, int> > convex;
+  //member functions
+  void divide(); //divides points into upper and lower hulls
+  //pre: populated hull object
+  //post: nothing returned
+  pair <int, int> findMax(pair <int, int> Ap, pair <int, int> Bp, hull suspects);
+  //identifes farthes point from given line
+  //pre: two points, and a hull
+  //post: point within hull that is farthest away
+  void convexify(pair <int, int> A, pair <int, int> B, hull toCheck);
+  //recursively identifies convex hull
+  //pre: two points and a hull
+  //post: nothing returned
+};
+
+int determinant(pair<int, int> mtrx [3]){
+  int dtr; //result
+
+  dtr = (mtrx[0].first*mtrx[1].second) + (mtrx[1].first*mtrx[2].second) + (mtrx[2].first*mtrx[0].second) - (mtrx[2].first*mtrx[1].second) - (mtrx[1].first*mtrx[0].second) - (mtrx[0].first*mtrx[2].second);
+
+  return dtr;
 }
 
-double ccw(point_t *p1, point_t *p2, point_t *p3)
-{
-	double v = (p2->x - p1->x)*(p3->y - p1->y) - (p3->x - p1->x)*(p2->y - p1->y);
-	return v;
+void plane::set_points(int *x, int *y, int n){
+
+  pair <int, int> point; //contains x and y
+  for (int i=0; i<n; i++) {
+	  point.first = x[i];
+	  point.second = y[i];
+	  points.push_back(point);
+  }
+  sort (points.begin(), points.end()); //overloaded by <utility>
 }
 
-void swap (point_t *cloud, int i, int j)
-{
-	point_t tmp;
+void hull::divide(){
+  
+  hull lower, upper; //upper and lower sections
 
-	tmp.x = (cloud+i)->x; tmp.y = (cloud+i)->y;
-	(cloud+i)->x = (cloud+j)->x;
-	(cloud+i)->y = (cloud+j)->y;
-	(cloud+j)->x = tmp.x;
-	(cloud+j)->y = tmp.y;
+  int dtrm;
+  pair <int, int> mtrxsend [3] = {points.front(), points.back()};
+
+  convex.push_back(points.front());
+  convex.push_back(points.back());
+  
+  points.erase(points.begin());
+  points.pop_back();
+
+  vector< pair<int, int> >::iterator it;
+  for (it=points.begin(); it<points.end(); ++it){
+
+    mtrxsend[2] = *it;
+    dtrm = determinant(mtrxsend);
+
+    if(dtrm>0){
+      upper.points.push_back(*it);} //upper hull
+    else if(dtrm<0){
+      lower.points.push_back(*it);} //lower hull
+
+  }
+  convexify(convex[0], convex[1], upper);
+  convexify(convex[0], convex[1], lower);
 }
 
-int compar_cotan(const void *a, const void *b)
-{
-	point_t *p1 = (point_t *)a;
-	point_t *p2 = (point_t *)b;
-	double cotan1, cotan2;
+pair <int, int> hull::findMax(pair <int, int> Ap, pair <int, int> Bp, hull suspects){
+  float dist;
+  float prev = 0;
+  int dtrm;
+  int baseLen = ((Bp.first-Ap.first)^2 + (Bp.second-Ap.second)^2)^(1/2);
 
-	if ( (p1->x == base.x) && (p1->y == base.y) ) return -1;
-	if ( (p2->x == base.x) && (p2->y == base.y) ) return 1;
+  pair <int, int> pointfar;
 
-	/* p1, p2 and base are on the same vertical line */
-	if ( (p1->x == base.x) && (p2->x == base.x) ) {
-		if (p1->y < p2->y) return -1;
-		return 1;
-	}
+  pair <int, int> mtrxsend [3] = {Ap, Bp};
+  vector< pair <int, int> >::iterator it;
+  for (it = suspects.points.begin(); it< suspects.points.end(); ++it){
 
-	/* p1, p2 and base are on the same horizontal line 
-	   per Graham algo, base has the lowest x-coordinate. 
-	   Sort p1 and p2 according to the lowest x-coordinate */
-	if ( (p1->y == base.y) && (p2->y == base.y) ) {
-		if (p1->x < p2->x) return -1;
-		return 1;
-	}
+    mtrxsend[2] = *it;
 
-	cotan1 = (p1->x - base.x)/(p1->y - base.y);
-	cotan2 = (p2->x - base.x)/(p2->y - base.y);
+    dtrm = determinant(mtrxsend);
+    if (dtrm < 0) {dtrm*=-1;};
 
-	if (cotan1 > cotan2) return -1;
-	if (cotan1 < cotan2) return  1;
-	if (cotan1 == cotan2) { /* both points are aligned on the same side of base point - closest point is the first */
-		if (cotan1 < 0) {   /* Angle > 90 */
-			if (p1->x < p2->x) return -1;
-			if (p2->x < p1->x) return 1;
-		}
-		if (cotan1 > 0) { /* Angle < 90 */
-			if (p1->x < p2->x) return 1;
-			if (p2->x < p1->x) return -1;
-		}
-	}
+    dist = dtrm/baseLen;
+    if (dist >= prev){
+      pointfar = *it;
+      prev = dist;
+    };
+    
+  }
 
-	return 0;
+  return pointfar;
+
 }
 
-int jarvis(point_t *cloud, int n)
-{
-	int i, b=0, a=0, minx, np;
+void hull::convexify(pair <int, int> A, pair <int, int> B, hull toCheck){
 
-	minx = cloud[0].x;
-	np = 1;
-	for (i=1; i < n; i++)
+  if (toCheck.points.size() == 0){return;};
+
+
+  int dtrm;
+  hull nextCheck, nextCheckTwo;
+
+  pair <int, int> maxPoint = findMax(A, B, toCheck);
+  convex.push_back(maxPoint);
+
+  pair <int, int> mtrxsend [3] = {A, maxPoint};
+  vector< pair<int, int> >::iterator it;
+  for (it=toCheck.points.begin(); it<toCheck.points.end(); ++it){
+    if (*it==maxPoint){
+      //convex.push_back(*it);
+      continue;
+    }
+    mtrxsend[2] = *it;
+    dtrm = determinant(mtrxsend);
+
+    if (maxPoint.second<A.second){
+      if(dtrm<=0){
+        nextCheck.points.push_back(*it);
+      }
+    }
+    else if (dtrm>=0)
+      nextCheck.points.push_back(*it);
+  }
+
+  pair <int, int> mtrxsendTwo [3] = {maxPoint, B};
+  vector< pair<int, int> >::iterator i;
+  for (i=toCheck.points.begin(); i<toCheck.points.end(); ++i){
+    if (*i==maxPoint){
+      continue;
+    }
+    mtrxsendTwo[2] = *i;
+    dtrm = determinant(mtrxsendTwo);
+    
+    if (maxPoint.second<A.second){
+      if(dtrm<=0){
+        nextCheckTwo.points.push_back(*it);
+      }
+    }
+    else if (dtrm>=0)
+      nextCheckTwo.points.push_back(*it);
+  }
+
+  convexify(A, maxPoint, nextCheck);
+  convexify(maxPoint, B, nextCheckTwo);    
+}
+
+//  Public-domain function by Darel Rex Finley, 2006.
+double polygonArea(double *X, double *Y, int points) {
+
+	double area=0. ;
+	int i, j=points-1  ;
+
+	for (i=0; i<points; i++) {
+	area += (X[j]+X[i])*(Y[j]-Y[i]); j=i; }
+
+	return area*.5; 
+}
+
+double get_convex_hull_area_by_xy(int *x, int *y, int n) {
+	hull my_hull;
+
+	// set points
+	my_hull.set_points(x,y,n);
+
+	// calculate convex hull points
+	my_hull.divide();
+
+	// collect points
+	int p = 0;
+	double *x_db = (double*)malloc(sizeof(double)*my_hull.convex.size());
+	double *y_db = (double*)malloc(sizeof(double)*my_hull.convex.size());
+	for (vector<pair<int, int>>::iterator i = my_hull.convex.begin(); i != my_hull.convex.end(); ++i)
 	{
-		if (cloud[i].x < minx) {
-			minx = cloud[i].x;
-			a = i;
-		}
+		x_db[p] = (double)(i->first);
+		y_db[p] = (double)(i->second);
+		p = p + 1;
 	}
-	swap(cloud, a, 0);
-	while(1) {
-		a = np-1;
-		if ( a == 0 ) {
-			b = 1;
-			for (i=2; i < n; i++)
-				if (ccw(cloud+a, cloud+b, cloud+i) > 0) b = i;
-				else if (ccw(cloud+a, cloud+b, cloud+i) == 0) {
-					/* If the 3 points are aligned, update b only if i is between a and b */
-					if (is_inside_segment(cloud+i, cloud+a, cloud+b))
-						b = i;
-				}		
-		}
-		else {
-			b = 0;
-			for (i=1; i <n; i++) {
-				if (i == a) continue;
-				if (ccw(cloud+a, cloud+b, cloud+i) > 0) b = i;
-				else if (ccw(cloud+a, cloud+b, cloud+i) == 0) {
-					if (is_inside_segment(cloud+i, cloud+a, cloud+b))
-						b = i;
-				}		
-			}
-		}
-		if (b == 0) break;
-		swap(cloud, np++, b);
-	}
-	return np;
+
+	// calculate size
+	double area = polygonArea(x_db, y_db, my_hull.convex.size());
+
+	// release memory
+	free(x_db);
+	free(y_db);
+
+	return area;
 }
 
-int graham (point_t *cloud, int n)
-{
-	int i, a0, m;
+double get_convex_hull_area_by_img(u8 *img, int row, int col) {
 
-	a0 = 0;
-	for (i=1; i < n; i++) {
-		if (cloud[a0].y > cloud[i].y)
-			a0 = i;
-		if (cloud[a0].y == cloud[i].y)
-			if (cloud[a0].x > cloud[i].x)
-				a0 = i;
-	}	
-	base.x = cloud[a0].x; base.y = cloud[a0].y;
-	cloud[n].x = base.x; cloud[n].y = base.y;
-	qsort(cloud, n+1, sizeof(point_t), compar_cotan);
-	cloud[0].x = cloud[n].x; cloud[0].y = cloud[n].y;
-
-	m = 2;
-	for (i=3; i<=n; i++) {
-		while (ccw(cloud+m-1, cloud+m, cloud+i) <= 0)
-			m--;
-		m++;
-		swap(cloud, m, i);
-	}
-	/* Swap back the last point to avoid corrupting the initial set */
-	swap(cloud, m, n);
-	return m;
-}
-
-
-#ifndef MATLAB
-int main(void)
-{
-	u8 img_cum[21] = {0,0,0,1,0,0,0,
-                      0,0,0,0,0,0,0,
-					  0,1,0,0,0,1,0};
-	int w = 7, h = 3;
-	point_t *points = (point_t*)malloc(sizeof(point_t *)*w*h);
-	memset(points, 0, sizeof(point_t)*w*h);
-
+	int *x = (int*)malloc(sizeof(int)*row*col);
+	int *y = (int*)malloc(sizeof(int)*row*col);
 	int n = 0;
-	for (int i=0; i<h; i++) {
-		for (int j=0; j<w; j++) {
-			if (img_cum[i*w+j]==1) {
-				points[n].x = j;
-				points[n].y = i;
+	for (int i=0; i<row; i++) {
+		for (int j=0; j<col; j++) {
+			if (img[i*col+j]>0) {
+				x[n] = j;
+				y[n] = i;
 				n = n + 1;
 			}
 		}
 	}
-	int hull_size = 0;
-	int m = jarvis(points, n);
+	double size = get_convex_hull_area_by_xy(x,y,n);
+	free(x);
+	free(y);
+
+	return size;
+}
+
+#ifndef MATLAB
+int main(void)
+{
+	u8 img[15]={0,0,1,0,0,
+	            0,1,1,1,0,
+	            1,1,1,1,1};
+	int row = 3;
+	int col = 5;
+	double size = get_convex_hull_area_by_img(img, row, col);
 
 	return 0;
 }
 #else
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    u8 *img_new = (u8*)mxGetPr(prhs[0]); // transposed input matrix is expected
-    u8 *img_cum = (u8*)mxGetPr(prhs[1]); // transposed input matrix is expected
+    u8 *img = (u8*)mxGetPr(prhs[0]); // transposed input matrix is expected
     int img_rows = (int)mxGetN(prhs[0]); // switch rows & cols
     int img_cols = (int)mxGetM(prhs[0]); // switch rows & cols
     
-    plhs[0] = mxCreateNumericMatrix(1, 1, mxINT32_CLASS, mxREAL);
+    plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
     int *out = (int*)mxGetPr(plhs[0]);
 
-    *out = imfeat_eulerno_change_algo(img_new, img_cum, img_rows, img_cols);
+    *out = get_convex_hull_area_by_img(img, img_rows, img_cols);
 }
 #endif
 
