@@ -24,222 +24,237 @@
 
 #ifdef IMFEAT_BINARY_GET_CONVEXHULL_C
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <iostream>
-#include <fstream>
-#include <utility>
-#include <vector>
-#include <string>
-#include <algorithm>
-#include <time.h>
-#include <math.h>
-
-using namespace std;
-
-//#include <opencv2/opencv.hpp>
-//using namespace cv;
+//#include "bool.h"
+//#include "geometry.h"
+#include "stdlib.h"
+#include "stdio.h"
 
 typedef unsigned char u8;
 typedef unsigned short int u16;
 typedef unsigned long int u32;
 
-class plane{
-protected:
-  //member variables
-  vector< pair<int, int> > points; //contains points
-  //member functions
-public:
-  void set_points(int *x, int *y, int n); //loads file of points
-  //pre: a txt file, first line number of points, rest lines points
-  //post: nothing returned
-};
+#define	PI	3.1415926	/* ratio of circumference to diameter */
+#define EPSILON	0.000001	/* a quantity small enough to be zero */
 
-class hull:public plane{
-public:
-  hull(){};
-  //member variables
-  vector<pair <int, int> > convex;
-  //member functions
-  void divide(); //divides points into upper and lower hulls
-  //pre: populated hull object
-  //post: nothing returned
-  pair <int, int> findMax(pair <int, int> Ap, pair <int, int> Bp, hull suspects);
-  //identifes farthes point from given line
-  //pre: two points, and a hull
-  //post: point within hull that is farthest away
-  void convexify(pair <int, int> A, pair <int, int> B, hull toCheck);
-  //recursively identifies convex hull
-  //pre: two points and a hull
-  //post: nothing returned
-};
+typedef struct {
+	double a;		/* x-coefficient */
+	double b;		/* y-coefficient */
+	double c;		/* constant term */
+} line;
 
-int determinant(pair<int, int> mtrx [3]){
-  int dtr; //result
+#define DIMENSION	2	/* dimension of points */
+#define X		0	/* x-coordinate index */
+#define	Y		1	/* y-coordinate index */
 
-  dtr = (mtrx[0].first*mtrx[1].second) + (mtrx[1].first*mtrx[2].second) + (mtrx[2].first*mtrx[0].second) - (mtrx[2].first*mtrx[1].second) - (mtrx[1].first*mtrx[0].second) - (mtrx[0].first*mtrx[2].second);
+typedef double point[DIMENSION];
 
-  return dtr;
+typedef struct {
+	int n;			/* number of points in polygon */
+	point *p;       /* array of points in polygon */
+} polygon;
+
+
+typedef struct {
+	point p1,p2;		/* endpoints of line segment */
+} segment;
+
+typedef point triangle[3];	/* triangle datatype */
+
+typedef struct {
+	point c;		/* center of circle */
+	double r;		/* radius of circle */
+} circle;
+
+
+/*	Comparison macros 	*/
+
+#define	max(A, B)		((A) > (B) ? (A) : (B))
+#define min(A, B)		((A) < (B) ? (A) : (B))
+
+void copy_point(point a, point b)
+{
+	int i;			/* counter */
+
+	for (i=0; i<DIMENSION; i++) b[i] = a[i];
 }
 
-void plane::set_points(int *x, int *y, int n){
+#include <math.h>
 
-  pair <int, int> point; //contains x and y
-  for (int i=0; i<n; i++) {
-	  point.first = x[i];
-	  point.second = y[i];
-	  points.push_back(point);
-  }
-  sort (points.begin(), points.end()); //overloaded by <utility>
+point first_point;		/* first hull point */
+
+int comp( const void * , const void * ) ; 
+
+int leftlower(const void *_p1, const void *_p2)
+{
+	point *p1 = (point *)_p1;
+	point *p2 = (point *)_p2;
+	if ((*p1)[X] < (*p2)[X]) return (-1);
+	if ((*p1)[X] > (*p2)[X]) return (1);
+	if ((*p1)[Y] < (*p2)[Y]) return (-1);
+	if ((*p1)[Y] > (*p2)[Y]) return (1);
+
+	return(0);
 }
 
-void hull::divide(){
-  
-  hull lower, upper; //upper and lower sections
+void sort_and_remove_duplicates(point in[], int *n)
+{
+	int i;                  /* counter */
+	int oldn;               /* number of points before deletion */
+	int hole;               /* index marked for potential deletion */
+	//bool leftlower();
 
-  int dtrm;
-  pair <int, int> mtrxsend [3] = {points.front(), points.back()};
+	qsort(in, *n, sizeof(point), leftlower);
 
-  convex.push_back(points.front());
-  convex.push_back(points.back());
-  
-  points.erase(points.begin());
-  points.pop_back();
-
-  vector< pair<int, int> >::iterator it;
-  for (it=points.begin(); it<points.end(); ++it){
-
-    mtrxsend[2] = *it;
-    dtrm = determinant(mtrxsend);
-
-    if(dtrm>0){
-      upper.points.push_back(*it);} //upper hull
-    else if(dtrm<0){
-      lower.points.push_back(*it);} //lower hull
-
-  }
-  convexify(convex[0], convex[1], upper);
-  convexify(convex[0], convex[1], lower);
+	oldn = *n;
+	hole = 1;
+	for (i=1; i<oldn; i++) {
+		if ((in[hole-1][X] == in[i][X]) && (in[hole-1][Y] == in[i][Y])) 
+			(*n)--;
+		else {
+			copy_point(in[i],in[hole]);
+			hole = hole + 1;
+		}
+	}
+	//copy_point(in[oldn-1],in[hole]);
 }
 
-pair <int, int> hull::findMax(pair <int, int> Ap, pair <int, int> Bp, hull suspects){
-  float dist;
-  float prev = 0;
-  int dtrm;
-  int baseLen = ((Bp.first-Ap.first)^2 + (Bp.second-Ap.second)^2)^(1/2);
-
-  pair <int, int> pointfar;
-
-  pair <int, int> mtrxsend [3] = {Ap, Bp};
-  vector< pair <int, int> >::iterator it;
-  for (it = suspects.points.begin(); it< suspects.points.end(); ++it){
-
-    mtrxsend[2] = *it;
-
-    dtrm = determinant(mtrxsend);
-    if (dtrm < 0) {dtrm*=-1;};
-
-    dist = dtrm/baseLen;
-    if (dist >= prev){
-      pointfar = *it;
-      prev = dist;
-    };
-    
-  }
-
-  return pointfar;
-
+double signed_triangle_area(point a, point b, point c)
+{
+	return( (a[X]*b[Y] - a[Y]*b[X] + a[Y]*c[X] 
+		- a[X]*c[Y] + b[X]*c[Y] - c[X]*b[Y]) / 2.0 );
 }
 
-void hull::convexify(pair <int, int> A, pair <int, int> B, hull toCheck){
+bool collinear(point a, point b, point c)
+{
+	//double signed_triangle_area();
 
-  if (toCheck.points.size() == 0){return;};
+	return (fabs(signed_triangle_area(a,b,c)) <= EPSILON);
+}
+
+double distance(point a, point b)
+{
+        int i;			/* counter */
+        double d=0.0;		/* accumulated distance */
+
+        for (i=0; i<DIMENSION; i++)
+                d = d + (a[i]-b[i]) * (a[i]-b[i]);
+
+        return( sqrt(d) );
+}
+
+bool ccw(point a, point b, point c)
+{
+	//double signed_triangle_area();
+
+	return (signed_triangle_area(a,b,c) > EPSILON);
+}
+
+int smaller_angle(const void *_p1, const void *_p2)
+{
+	point *p1 = (point *)_p1;
+	point *p2 = (point *)_p2;
+	if (collinear(first_point,*p1,*p2)) {
+		if (distance(first_point,*p1) <= distance(first_point,*p2))
+			return(-1);
+		else
+			return(1);
+	}
+
+	if (ccw(first_point,*p1,*p2))
+		return(-1);
+	else
+		return(1);
+}
 
 
-  int dtrm;
-  hull nextCheck, nextCheckTwo;
+void convex_hull(point in[], int n, polygon *hull)
+{
+	int i;			/* input counter */
+	int top;		/* current hull size */
+	//bool smaller_angle();
+	
+	if (n <= 3) { 		/* all points on hull! */
+		for (i=0; i<n; i++)
+			copy_point(in[i],hull->p[i]);
+		hull->n = n;
+		return;
+	}
 
-  pair <int, int> maxPoint = findMax(A, B, toCheck);
-  convex.push_back(maxPoint);
+	sort_and_remove_duplicates(in,&n);
+	copy_point(in[0],first_point);
 
-  pair <int, int> mtrxsend [3] = {A, maxPoint};
-  vector< pair<int, int> >::iterator it;
-  for (it=toCheck.points.begin(); it<toCheck.points.end(); ++it){
-    if (*it==maxPoint){
-      //convex.push_back(*it);
-      continue;
-    }
-    mtrxsend[2] = *it;
-    dtrm = determinant(mtrxsend);
+	qsort(&in[1], n-1, sizeof(point), smaller_angle);
 
-    if (maxPoint.second<A.second){
-      if(dtrm<=0){
-        nextCheck.points.push_back(*it);
-      }
-    }
-    else if (dtrm>=0)
-      nextCheck.points.push_back(*it);
-  }
+	copy_point(first_point,hull->p[0]);
+	copy_point(in[1],hull->p[1]);
 
-  pair <int, int> mtrxsendTwo [3] = {maxPoint, B};
-  vector< pair<int, int> >::iterator i;
-  for (i=toCheck.points.begin(); i<toCheck.points.end(); ++i){
-    if (*i==maxPoint){
-      continue;
-    }
-    mtrxsendTwo[2] = *i;
-    dtrm = determinant(mtrxsendTwo);
-    
-    if (maxPoint.second<A.second){
-      if(dtrm<=0){
-        nextCheckTwo.points.push_back(*it);
-      }
-    }
-    else if (dtrm>=0)
-      nextCheckTwo.points.push_back(*it);
-  }
+	copy_point(first_point,in[n]);	/* sentinel to avoid special case */
+	top = 1;
+	i = 2;
 
-  convexify(A, maxPoint, nextCheck);
-  convexify(maxPoint, B, nextCheckTwo);    
+	while (i <= n) {
+		if (!ccw(hull->p[top-1], hull->p[top], in[i])) 
+			top = top-1;	/* top not on hull */
+		else {
+			top = top+1;
+                    	copy_point(in[i],hull->p[top]);
+			i = i+1;
+		}
+	}
+
+	hull->n = top;
+}
+
+void print_polygon(polygon *p)
+{
+	int i;			/* counter */
+
+        for (i=0; i<p->n; i++)
+                printf("(%lf,%lf)\n",p->p[i][X],p->p[i][Y]);
 }
 
 //  Public-domain function by Darel Rex Finley, 2006.
-double polygonArea(double *X, double *Y, int points) {
+double polygonArea(double *x, double *y, int points) {
 
 	double area=0. ;
 	int i, j=points-1  ;
 
 	for (i=0; i<points; i++) {
-	area += (X[j]+X[i])*(Y[j]-Y[i]); j=i; }
+	area += (x[j]+x[i])*(y[j]-y[i]); j=i; }
 
 	return area*.5; 
 }
 
-double get_convex_hull_area_by_xy(int *x, int *y, int n) {
-	hull my_hull;
+double get_convex_hull_area_by_xy(int *x, int *y, int n, int max_size) {
 
-	// set points
-	my_hull.set_points(x,y,n);
+	// calculate convex hull
+	point *in = (point *)malloc(sizeof(point)*n);
+	for (int i=0; i<n; i++) {
+		in[i][X] = x[i];
+		in[i][Y] = y[i];
+	}
+	polygon my_hull;
+	my_hull.n = 0;
+	my_hull.p = (point *)malloc(sizeof(point)*max_size);
 
-	// calculate convex hull points
-	my_hull.divide();
+	//sort_and_remove_duplicates(in,&n);
+	convex_hull(in, n, &my_hull);
 
 	// collect points
 	int p = 0;
-	double *x_db = (double*)malloc(sizeof(double)*my_hull.convex.size());
-	double *y_db = (double*)malloc(sizeof(double)*my_hull.convex.size());
-	for (vector<pair<int, int>>::iterator i = my_hull.convex.begin(); i != my_hull.convex.end(); ++i)
-	{
-		x_db[p] = (double)(i->first);
-		y_db[p] = (double)(i->second);
+	double *x_db = (double*)malloc(sizeof(double)*my_hull.n);
+	double *y_db = (double*)malloc(sizeof(double)*my_hull.n);
+	for (int i=0; i<my_hull.n; i++) {
+		x_db[p] = (double)(my_hull.p[i][X]);
+		y_db[p] = (double)(my_hull.p[i][Y]);
 		p = p + 1;
 	}
 
 	// calculate size
-	double area = polygonArea(x_db, y_db, my_hull.convex.size());
+	double area = polygonArea(x_db, y_db, my_hull.n);
 
 	// release memory
+	//free(in);
 	free(x_db);
 	free(y_db);
 
@@ -260,7 +275,7 @@ double get_convex_hull_area_by_img(u8 *img, int row, int col) {
 			}
 		}
 	}
-	double size = get_convex_hull_area_by_xy(x,y,n);
+	double size = get_convex_hull_area_by_xy(x,y,n,row*col);
 	free(x);
 	free(y);
 
@@ -268,6 +283,7 @@ double get_convex_hull_area_by_img(u8 *img, int row, int col) {
 }
 
 #ifndef MATLAB
+
 int main(void)
 {
 	u8 img[15]={0,0,1,0,0,
@@ -279,6 +295,7 @@ int main(void)
 
 	return 0;
 }
+
 #else
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {

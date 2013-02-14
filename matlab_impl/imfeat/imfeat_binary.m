@@ -455,6 +455,15 @@ end
 
 function [out] = imfeat_convexhull_algo(I, cmd1, cmd2)
 
-out = imfeat_binary_get_convexhull_c(I');
+p = 1;
+for h = 1:size(I,1)
+   k = find(I(h,:)==1);
+   n = length(k);
+   x(p:p+n-1) = k;
+   y(p:p+n-1) = h;
+   p = p + n;
+end
+vi = convhull(x, y);
+out = polyarea(x(vi), y(vi));
 
 end
