@@ -349,6 +349,18 @@ switch feat_name
         r = imfeat('extract_feature_raw_convexhull_all', '', im);
         assert(r.feat_raw==8);
         
+        % hole size
+        I = [0 1 0 1 0;
+             0 1 1 1 0;
+             1 1 0 1 1;
+             0 1 1 1 0;
+             1 1 0 1 1;
+             0 1 1 1 0;
+             1 1 0 1 1];
+        im = imfeat('set_image', uint8(I), im);
+        r = imfeat('extract_feature_raw_holesize_all', '', im);
+        assert(r.feat_raw==2);
+        
         result = 1;
            
     otherwise

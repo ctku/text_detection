@@ -33,6 +33,8 @@ switch cmd1
         param.feat_raw = imfeat_hzcrossing_algo(param.image, cmd1, cmd2);
     case {'extract_feature_raw_convexhull_all'}
         param.feat_raw = imfeat_convexhull_algo(param.image, cmd1, cmd2);
+    case {'extract_feature_raw_holesize_all'}
+        param.feat_raw = imfeat_holesize_algo(param.image, cmd1, cmd2);
     otherwise
         warning('Unsupport cmd: %s',cmd1);
 end
@@ -469,5 +471,53 @@ for h = 1:size(I,1)
 end
 vi = convhull(x, y);
 out = polyarea(x(vi), y(vi));
+
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function [out] = imfeat_holesize_algo(I, cmd1, cmd2)
+
+[H,W] = size(I);
+B = logical(I);
+
+% fill up from edge of left side
+i = 1;
+while ~isempty(i)
+    i = find(B(:,1)==0,1,'first');
+    if ~isempty(i)
+        B = imfill(B, [i,1], 4);
+    end
+end
+
+% fill up from edge of right side
+i = 1;
+while ~isempty(i)
+    i = find(B(:,W)==0,1,'first');
+    if ~isempty(i)
+        B = imfill(B, [i,W], 4);
+    end
+end
+
+% fill up from edge of top side
+i = 1;
+while ~isempty(i)
+    i = find(B(1,:)==0,1,'first');
+    if ~isempty(i)
+        B = imfill(B, [1,i], 4);
+    end
+end
+
+% fill up from edge of bottom side
+i = 1;
+while ~isempty(i)
+    i = find(B(H,:)==0,1,'first');
+    if ~isempty(i)
+        B = imfill(B, [H,i], 4);
+    end
+end
+
+% rest unfilled pixels are holes
+out = sum(sum(~B));
 
 end
