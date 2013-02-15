@@ -4,8 +4,8 @@ close all;
 addpath_for_me;
 tic
 % Input parameter
-fd = 'ryoungt_13.08.2002'; fn = 'vPICT0025'; resize = [300 300];
-fd = 'apanar_06.08.2002'; fn = 'IMG_1291'; resize = [400 400];
+fd = 'ryoungt_13.08.2002'; fn = 'vPICT0025'; resize = [200 200];
+% fd = 'apanar_06.08.2002'; fn = 'IMG_1291'; resize = [400 400];
 
 % 1st stage classifier parameters
 rule_param.MIN_W_REG2IMG_RATIO = 0.0019;
@@ -17,7 +17,7 @@ rule_param.MAX_H_REG2IMG_RATIO = 0.7989;
 ds_eng = [];
 ds_eng = imdataset('init', 'ICDAR2003RobustReading', ds_eng);
 ds_eng = imdataset('get_test_dataset_path', '', ds_eng);
-ds_eng = imdataset('get_train_dataset_path', '', ds_eng);
+% ds_eng = imdataset('get_train_dataset_path', '', ds_eng);
 
 % feature initialization
 ft_ert = []; ft_bin = [];
@@ -34,9 +34,7 @@ ft_ert = imfeat('resize', resize, ft_ert);
 % load trained AdaBoostM1
 load('ada.mat'); 
 ft_ert.ft_pool = [0 0 0 0 0];
-path = util_changeFn('','cd ..','');
-path = util_changeFn(path,'cd ..','');
-path = util_changeFn(path,'cd _mkdir','_output_files');
+path = util_changeFn('','cd _mkdir','_output_files');
 for reverse = 0:1
     
     ft_ert = imfeat('extract_feature_raw_get_all_preproc', reverse, ft_ert);
@@ -94,7 +92,7 @@ function [postp, ft_struct, ft_ert] = get_post_prob_by_raw_ER(idx, use_inc, rule
 %     profile on;
     idx
     % (1) get ER data
-    ft_ert = imfeat('extract_feature_raw_get_one_cropped_data_and_dif', idx, ft_ert);
+    ft_ert = imfeat('extract_feature_raw_get_single_data_and_dif', idx, ft_ert);
     ER = ft_ert.feat_raw.tree{idx(1), idx(2)};
 
     % (2) get posterior prob.
