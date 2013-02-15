@@ -32,5 +32,6 @@ ft_struct.ft_sz = ft2;
 ft_struct.ft_pr = ft3;
 ft_struct.ft_eu = ft4;
 ft_struct.ft_hz = ft5;
+ft_struct.ft_hz_pre_data_t = ER.data_t;
 
 end

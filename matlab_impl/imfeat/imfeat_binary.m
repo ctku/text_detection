@@ -411,8 +411,12 @@ switch cmd1
     case 'compute_feature_raw_hzcrossing_incrementally'
         new = I;       % new pixels
         cum = cmd2{1}; % accumulated pixels
-        hzc = cmd2{2}; % accumulated hzcrosssing vector
-        out = hzc + imfeat_hzcrossing_change_algo(new, cum);
+        hzc = cmd2{2}; % accumulated hzcrossing vector
+        off = cmd2{3}; % offset between hzc & (new or cum)
+        hzc_cum = zeros(1,size(I,1));
+        hzc_cum(off+1:off+size(hzc,2)) = hzc;
+        hzc_dif = imfeat_hzcrossing_change_algo(new, cum);
+        out = hzc_cum + hzc_dif;
     otherwise
         warning('Unsupport cmd: %s',cmd1);
 end

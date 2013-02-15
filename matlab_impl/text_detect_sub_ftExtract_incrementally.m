@@ -29,6 +29,7 @@ ft4 = imfeat('compute_feature_raw_eulerno_incrementally', ex4, ft_bin);
 % horizontal crossing
 ex5{1} = I_cum;
 ex5{2} = f_cum_hz;
+ex5{3} = ft_struct.ft_hz_pre_data_t - ER.data_t;
 ft5 = imfeat('compute_feature_raw_hzcrossing_incrementally', ex5, ft_bin);
 
 % (3) compute desired features
@@ -55,5 +56,6 @@ ft_struct.ft_sz = ft2;
 ft_struct.ft_pr = ft3;
 ft_struct.ft_eu = ft4;
 ft_struct.ft_hz = ft5;
+ft_struct.ft_hz_pre_data_t = ER.data_t;
 
 end

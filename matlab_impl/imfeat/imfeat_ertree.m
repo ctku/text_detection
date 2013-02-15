@@ -4,8 +4,9 @@ switch cmd1
     case 'initialization'
         param.rd.mode = 'gray';
     case {'extract_feature_raw_get_all_preproc', ...
-          'extract_feature_raw_get_single_data_and_dif', ...
-          'extract_feature_raw_del_single_data_and_dif'}
+          'extract_feature_raw_get_one_full_data_and_dif', ...
+          'extract_feature_raw_get_one_cropped_data_and_dif', ...
+          'extract_feature_raw_del_data_and_dif'}
         param.feat_raw = imfeat_ertree_algo(cmd1, cmd2, param);
     otherwise
         warning('Unsupport cmd: %s',cmd1);
@@ -22,9 +23,11 @@ switch cmd1
         %profile on;
         out = imfeat_ertree_algo_get_all_preproc(param.image, cmd2);
         %profile viewer;
-    case 'extract_feature_raw_get_single_data_and_dif'
-        out = imfeat_ertree_algo_get_single(param.image, param.feat_raw, cmd2(1), cmd2(2));
-    case 'extract_feature_raw_del_single_data_and_dif'
+    case 'extract_feature_raw_get_one_full_data_and_dif'
+        out = imfeat_ertree_algo_get_single(param.image, param.feat_raw, 'full', cmd2(1), cmd2(2));
+    case 'extract_feature_raw_get_one_cropped_data_and_dif'
+        out = imfeat_ertree_algo_get_single(param.image, param.feat_raw, 'cropped', cmd2(1), cmd2(2));
+    case 'extract_feature_raw_del_data_and_dif'
         out = imfeat_ertree_algo_del_single(param.feat_raw, cmd2(1), cmd2(2));
 end
         
@@ -53,6 +56,10 @@ for i=0:num-1
     N(t) = N(t) + 1;
     fmap(x+1:x+n,t) = N(t);
     TR{t,N(t)}.data = -1;
+    TR{t,N(t)}.data_l = 1;
+    TR{t,N(t)}.data_t = 1;
+    TR{t,N(t)}.data_r = img_cols;
+    TR{t,N(t)}.data_b = img_rows;
     TR{t,N(t)}.dif = -1;
     TR{t,N(t)}.data_valid = 0;
     TR{t,N(t)}.dif_valid = 0;
@@ -62,12 +69,6 @@ for i=0:num-1
     TR{t,N(t)}.chd = [];
     TR{t,N(t)}.chd_no = 0;
     TR{t,N(t)}.postp = -1;
-%     fst = x+1;
-%     num = n;
-%     vec = pxl(fst:fst+num-1)+1; % correct start index as Matlab sense
-%     if sum(vec==(14*100+75))>0
-%         t
-%     end
 end
 if reverse==0
     t_last = max(max(img))+1;
@@ -79,6 +80,10 @@ fmap(:,t_last) = 1;
 % create last ER manually
 TR{t_last,1}.par = [0,0]; % use zero parents to denote root node
 TR{t_last,1}.data = true(img_rows, img_cols);
+TR{t_last,1}.data_l = 1;
+TR{t_last,1}.data_t = 1;
+TR{t_last,1}.data_r = img_cols;
+TR{t_last,1}.data_b = img_rows;
 TR{t_last,1}.dif = false(img_rows, img_cols);
 TR{t_last,1}.data_valid = 1;
 TR{t_last,1}.dif_valid = 1;
@@ -115,7 +120,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [out] = imfeat_ertree_algo_get_single(I, feat_raw, t, n)
+function [out] = imfeat_ertree_algo_get_single(I, feat_raw, type, t, n)
 
 img = I;
 img_rows = size(img,1);
@@ -131,7 +136,8 @@ if out.tree{t,n}.data_valid == 0
     vec = pxl(fst:fst+num-1)+1; % correct start index as Matlab sense
     TR_data = false(1,pixels);
     TR_data(vec) = 1;
-    out.tree{t,n}.data = reshape(TR_data, img_cols, img_rows)'; % row-wised reshape
+    data = reshape(TR_data, img_cols, img_rows)'; % row-wised reshape
+    out.tree{t,n}.data = data;
     out.tree{t,n}.data_valid = 1;
 end
 
@@ -149,13 +155,67 @@ if ~isequal(par,[0 0])
     end
     % compute dif
     if out.tree{t,n}.dif_valid == 0
-        out.tree{t,n}.dif = out.tree{par(1),par(2)}.data & ~out.tree{t,n}.data;
+        data = out.tree{t,n}.data;
+        data = data(out.tree{par(1),par(2)}.data_t:out.tree{par(1),par(2)}.data_b, ...
+                    out.tree{par(1),par(2)}.data_l:out.tree{par(1),par(2)}.data_r);
+        dif = out.tree{par(1),par(2)}.data & ~data;
         out.tree{t,n}.dif_valid = 1;
         out.tree{t,n}.dif_size = double(out.tree{par(1),par(2)}.raw(2)) - double(out.tree{t,n}.raw(2));
         out.tree{t,n}.dif_par_ratio = double(out.tree{t,n}.dif_size) / double(out.tree{par(1),par(2)}.raw(2));
+        % if necessary, crop dif & data only when computing dif
+        if strcmp(type, 'cropped');
+            % crop to a min rectangle containing all data
+            [ll, tt, rr, bb] = imfeat_ertree_algo_crop_data(out.tree{par(1),par(2)}.data);
+            out.tree{t,n}.dif = dif(tt:bb,ll:rr);
+            out.tree{t,n}.data = out.tree{t,n}.data(tt+out.tree{par(1),par(2)}.data_t-1:...
+                                                    bb+out.tree{par(1),par(2)}.data_t-1,...
+                                                    ll+out.tree{par(1),par(2)}.data_l-1:...
+                                                    rr+out.tree{par(1),par(2)}.data_l-1);
+            out.tree{t,n}.data_valid = 2;
+            out.tree{t,n}.dif_valid = 2;
+        else
+            ll = 1;
+            tt = 1;
+            rr = img_cols;
+            bb = img_rows;
+            out.tree{t,n}.dif = dif;
+        end
+        out.tree{t,n}.data_l = ll+out.tree{par(1),par(2)}.data_l-1;
+        out.tree{t,n}.data_r = rr+out.tree{par(1),par(2)}.data_l-1;
+        out.tree{t,n}.data_t = tt+out.tree{par(1),par(2)}.data_t-1;
+        out.tree{t,n}.data_b = bb+out.tree{par(1),par(2)}.data_t-1;
     end
 end
 
+end
+
+function [l, t, r, b] = imfeat_ertree_algo_crop_data(data)
+    [L, N] = bwlabel(data, 4);
+    r = []; c = [];
+    if size(data,1)==1
+        r = find(data==1);
+        l = min(r);
+        r = max(r);
+        t = 1;
+        b = 1;
+    elseif size(data,2)==1
+        c = find(data'==1);
+        l = 1;
+        r = 1;
+        t = min(c);
+        b = max(c);
+    else
+        for i=1:N
+            map = (i==L);
+            r = [r find(max(map))];
+            c = [c find(max(map'))];
+        end
+        l = min(r);
+        r = max(r);
+        t = min(c);
+        b = max(c);
+    end
+    
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -164,9 +224,14 @@ function [out] = imfeat_ertree_algo_del_single(feat_raw, t, n)
 
 out = feat_raw;
 out.tree{t,n}.data = -1;
+out.tree{t,n}.data_l = -1;
+out.tree{t,n}.data_r = -1;
+out.tree{t,n}.data_t = -1;
+out.tree{t,n}.data_b = -1;
 out.tree{t,n}.data_valid = 0;
 out.tree{t,n}.dif = -1;
 out.tree{t,n}.dif_valid = 0;
+
 
 end
 
