@@ -3,19 +3,19 @@ function [param] = imdataset_Chars74K(cmd1, cmd2, param)
 switch cmd1
     % English font dataset
     case 'get_eng_font_dataset_path'
-        param.path = '../../Dataset/Chars74K/English/Fnt/';
+        param.path = '../../../Dataset/Chars74K/English/Fnt/';
     case 'get_eng_font_dataset'
-        param.path = '../../Dataset/Chars74K/English/Fnt/';
+        param.path = '../../../Dataset/Chars74K/English/Fnt/';
         param = get_Chars74K(param);
     % English handwriting dataset
     case 'get_eng_handwriting_dataset_path'
-        param.path = '../../Dataset/Chars74K/English/Hnd/Img/';
+        param.path = '../../../Dataset/Chars74K/English/Hnd/Img/';
     % English good image dataset  
     case 'get_eng_goodimg_dataset_path'
-        param.path = '../../Dataset/Chars74K/English/Img/GoodImg/Bmp/';
+        param.path = '../../../Dataset/Chars74K/English/Img/GoodImg/Bmp/';
     % English bad image dataset  
     case 'get_eng_badimg_dataset_path'
-        param.path = '../../Dataset/Chars74K/English/Img/BadImg/Bmp/';
+        param.path = '../../../Dataset/Chars74K/English/Img/BadImg/Bmp/';
     otherwise
         warning('Unsupport cmd: %s',cmd1);
 end

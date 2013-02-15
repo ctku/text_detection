@@ -2,7 +2,7 @@ function [param] = imdataset_ArabicSigns10(cmd1, cmd2, param)
 
 switch cmd1
     case 'get_test_dataset'
-        path = '../../Dataset/ArabicSigns-1.0/data/';
+        path = '../../../Dataset/ArabicSigns-1.0/data/';
         param = get_ArabicSigns10(path, param);
     otherwise
         warning('Unsupport cmd: %s',cmd1);

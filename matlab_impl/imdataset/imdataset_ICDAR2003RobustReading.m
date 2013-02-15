@@ -3,30 +3,30 @@ function [param] = imdataset_ICDAR2003RobustReading(cmd1, cmd2, param)
 switch cmd1
     % sample dataset
     case 'get_sample_dataset_path'
-        param.path = '../../Dataset/ICDAR_Robust_Reading/SceneSample/';
+        param.path = '../../../Dataset/ICDAR_Robust_Reading/SceneSample/';
     case 'get_sample_dataset_defxml_word'
-        param.path = '../../Dataset/ICDAR_Robust_Reading/SceneSample/';
+        param.path = '../../../Dataset/ICDAR_Robust_Reading/SceneSample/';
         param = get_ICDAR2003RobustReading(param, 'defxml_word', '');
     % test dataset
     case 'get_test_dataset_path'
-        param.path = '../../Dataset/ICDAR_Robust_Reading/SceneTrialTest/';
+        param.path = '../../../Dataset/ICDAR_Robust_Reading/SceneTrialTest/';
     case 'get_test_dataset_defxml_word'
-        param.path = '../../Dataset/ICDAR_Robust_Reading/SceneTrialTest/';
+        param.path = '../../../Dataset/ICDAR_Robust_Reading/SceneTrialTest/';
         param = get_ICDAR2003RobustReading(param, 'defxml_word', '');
     % train dataset
     case 'get_train_dataset_path'
-        param.path = '../../Dataset/ICDAR_Robust_Reading/SceneTrialTrain/';
+        param.path = '../../../Dataset/ICDAR_Robust_Reading/SceneTrialTrain/';
     case 'get_train_dataset_defxml_word'
-        param.path = '../../Dataset/ICDAR_Robust_Reading/SceneTrialTrain/';
+        param.path = '../../../Dataset/ICDAR_Robust_Reading/SceneTrialTrain/';
         param = get_ICDAR2003RobustReading(param, 'defxml_word', '');
     case 'get_train_dataset_defxml_char'
-        param.path = '../../Dataset/ICDAR_Robust_Reading/SceneTrialTrain/';
+        param.path = '../../../Dataset/ICDAR_Robust_Reading/SceneTrialTrain/';
         param = get_ICDAR2003RobustReading(param, 'defxml_char', '');
     case 'get_train_dataset_random_nonchar'
-        param.path = '../../Dataset/ICDAR_Robust_Reading/SceneTrialTrain/';
+        param.path = '../../../Dataset/ICDAR_Robust_Reading/SceneTrialTrain/';
         param = get_ICDAR2003RobustReading(param, 'random_nonchar', cmd2);
     case 'get_train_dataset_GEDIxml_nonchar'
-        param.path = '../../Dataset/ICDAR_Robust_Reading/SceneTrialTrain/';
+        param.path = '../../../Dataset/ICDAR_Robust_Reading/SceneTrialTrain/';
         param = get_ICDAR2003RobustReading(param, 'GEDIxml_nonchar', '');  
     otherwise
         warning('Unsupport cmd: %s',cmd1);
