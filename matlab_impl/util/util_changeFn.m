@@ -48,6 +48,9 @@ switch pos
         fn_out(last_slash+pt_len+2:last_slash++pt_len+fae_len+1) = fn_and_ext;
     % operate path without filename
     case 'cd ..'
+        if isempty(fn_in)
+           fn_in = strrep([pwd '\'], '\', '/');
+        end
         last_slash = max(strfind(fn_in,'/'));
         last_2nd_slash = max(strfind(fn_in(1:last_slash-1),'/'));
         fn_out = '';
