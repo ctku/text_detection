@@ -62,7 +62,7 @@ switch feat_name
         s = im.feat_raw.size;
         for t = 1:size(r,1)
             for n = 1:s(t)
-                im = imfeat('extract_feature_raw_get_single_data_and_dif', [t, n], im);
+                im = imfeat('extract_feature_raw_get_one_full_data_and_dif', [t, n], im);
             end
         end
         r = im.feat_raw.tree;
@@ -86,7 +86,7 @@ switch feat_name
                r{5,1}.isleaf==0);
         for t = 1:size(r,1)
             for n = 1:s(t)
-                im = imfeat('extract_feature_raw_del_single_data_and_dif', [t, n], im);
+                im = imfeat('extract_feature_raw_del_data_and_dif', [t, n], im);
             end
         end
         r = im.feat_raw.tree;
@@ -120,12 +120,12 @@ switch feat_name
         s = im.feat_raw.size;
         for t = 1:size(r,1)
             for n = 1:s(t)
-                im = imfeat('extract_feature_raw_get_single_data_and_dif', [t, n], im);
+                im = imfeat('extract_feature_raw_get_one_cropped_data_and_dif', [t, n], im);
             end
         end
         r = im.feat_raw.tree;
-        assert(isequal(r{252,1}.data, [0 1 0 0; 1 1 0 0; 0 0 0 0]) && ...
-               isequal(r{252,1}.dif,  [1 0 0 0; 0 0 0 0; 0 0 0 0]) && ...
+        assert(isequal(r{252,1}.data, [0 1; 1 1]) && ...
+               isequal(r{252,1}.dif,  [1 0; 0 0]) && ...
                isequal(r{253,1}.data, [1 1 0 0; 1 1 0 0; 0 0 0 0]) && ...
                isequal(r{253,1}.dif , [0 0 1 1; 0 0 1 1; 1 1 1 1]) && ...
                isequal(r{253,2}.data, [0 0 0 0; 0 0 0 0; 0 0 1 1]) && ...
@@ -333,11 +333,17 @@ switch feat_name
 
         % convex hull
         I = [0 0 1 0 0;
-             0 1 1 1 0;
+             0 0 1 0 0;
              1 1 1 1 1];
         im = imfeat('set_image', uint8(I), im);
         r = imfeat('extract_feature_raw_convexhull_all', '', im);
         assert(r.feat_raw==4);
+        I = [1 0 1 0 1;
+             0 0 1 0 0;
+             1 1 1 1 1];
+        im = imfeat('set_image', uint8(I), im);
+        r = imfeat('extract_feature_raw_convexhull_all', '', im);
+        assert(r.feat_raw==8);
         
         result = 1;
            
