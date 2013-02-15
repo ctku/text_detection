@@ -69,7 +69,7 @@ for reverse = 0:1
             end
         end
     end
-    save([path fn '_' num2str(resize(1)) 'x' num2str(resize(2)) '_reverse_' num2str(reverse) '.mat'],'pmap','ft_ert');
+    save([path fn '_' num2str(resize(1)) 'x' num2str(resize(2)) '_reverse_' num2str(reverse) '.mat'],'pmap','ft_ert','-v7.3');
 end
 toc
 end
