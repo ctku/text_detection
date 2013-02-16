@@ -35,6 +35,8 @@ switch cmd1
         param.feat_raw = imfeat_convexhull_algo(param.image, cmd1, cmd2);
     case {'extract_feature_raw_holesize_all'}
         param.feat_raw = imfeat_holesize_algo(param.image, cmd1, cmd2);
+    case {'extract_feature_raw_reflectpointno_all'}
+        param.feat_raw = imfeat_reflectpointno_algo(param.image, cmd1, cmd2);
     otherwise
         warning('Unsupport cmd: %s',cmd1);
 end
@@ -520,4 +522,77 @@ end
 % rest unfilled pixels are holes
 out = sum(sum(~B));
 
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function [out] = imfeat_reflectpointno_algo(I, cmd1, cmd2)
+
+% MIN_SEG2ALL_RATIO = 0.05; % not yet implement
+
+B = logical(I);
+[B, L] = bwboundaries(B,4,'noholes');
+
+if size(B{1},1) >=9
+    points = [B{1};B{1}(2:3,:)];
+    no_points = size(points,1);
+    % MIN_L = min(3, ceil(no_points*MIN_SEG2ALL_RATIO));
+    l2r = 0;
+    r2l = 0;
+    pre_l = next_locates_at(points(1,:), points(2,:));
+    pre_nonN_d = 'R'; % we will conpensate it if this guess is wrong
+    for i=2:no_points-1
+        [cur_d, pre_l] = get_turn_direction(pre_l, points(i,:), points(i+1,:));
+        if cur_d~='N'
+            switch [pre_nonN_d, cur_d]
+                case 'RL'
+                    pre_nonN_d = cur_d;
+                    r2l = r2l + 1;
+                case 'LR'
+                    pre_nonN_d = cur_d;
+                    l2r = l2r + 1;
+            end
+        end
+    end
+    out = l2r + r2l;
+    % since it must be even, the extra one cause it as odd is from initial
+    % wrong guess 'R', so subtract 1 if it's odd here.
+    out = out - mod(out,2);
+else
+    out = 0;
+end
+
+end
+
+function [d, nxt_loc] = get_turn_direction(cur_loc, cur_xy, nxt_xy)
+
+    nxt_loc = next_locates_at(cur_xy, nxt_xy);
+    loc_pattern = [cur_loc, nxt_loc];
+    switch loc_pattern
+        case {'BR','RT','TL','LB'}
+            d = 'L'; % turn left
+        case {'LT','BL','RB','TR'}
+            d = 'R'; % turn right
+        otherwise
+            d = 'N'; % no turn
+    end
+    
+end
+
+function loc = next_locates_at(cur_xy, nxt_xy)
+
+    if nxt_xy(1)==cur_xy(1)
+        if nxt_xy(2)<cur_xy(2)
+            loc = 'L';
+        else
+            loc = 'R';
+        end
+    elseif nxt_xy(2)==cur_xy(2)
+        if nxt_xy(1)<cur_xy(1)
+            loc = 'T';
+        else
+            loc = 'B';
+        end
+    end
+    
 end

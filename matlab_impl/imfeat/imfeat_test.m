@@ -360,7 +360,29 @@ switch feat_name
         im = imfeat('set_image', uint8(I), im);
         r = imfeat('extract_feature_raw_holesize_all', '', im);
         assert(r.feat_raw==2);
-        
+
+        % reflection points
+        I = [0 1 1 1 0;
+             1 1 0 1 1;
+             1 0 0 0 1;
+             1 1 0 1 1;
+             0 1 1 1 0];
+        im = imfeat('set_image', uint8(I), im);
+        r = imfeat('extract_feature_raw_reflectpointno_all', '', im);
+        assert(r.feat_raw==8);
+        I = [0 1 1 1 0;
+             0 1 0 1 0;
+             0 1 1 1 0];
+        im = imfeat('set_image', uint8(I), im);
+        r = imfeat('extract_feature_raw_reflectpointno_all', '', im);
+        assert(r.feat_raw==0);
+        I = [1 1 1;
+             1 1 1;
+             0 1 0];
+        im = imfeat('set_image', uint8(I), im);
+        r = imfeat('extract_feature_raw_reflectpointno_all', '', im);
+        assert(r.feat_raw==2);
+
         result = 1;
            
     otherwise
