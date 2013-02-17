@@ -27,7 +27,7 @@ for i=1:ds_nonc.no
         if exist(path_saved_mat, 'file')
             % collect it
             load(path_saved_mat);
-            fv_nonc = [fv_nonc; ft_vector];
+            fv_nonc = [fv_nonc; ft_vector(:,1:4)];
             no_nonc = no_nonc + 1;
         else
             % leave "for ii=1:200"

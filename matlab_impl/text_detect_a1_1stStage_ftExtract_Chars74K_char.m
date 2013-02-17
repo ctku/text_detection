@@ -39,7 +39,7 @@ for i=1:ds_eng.no
             end
         end
     end
-    ft_ert = imfeat('extract_feature_raw_get_single_data_and_dif', max_ER_idx, ft_ert);
+    ft_ert = imfeat('extract_feature_raw_get_one_cropped_data_and_dif', max_ER_idx, ft_ert);
     ER = ft_ert.feat_raw.tree{max_ER_idx(1),max_ER_idx(2)};
     
     % (3) extract feature vector (by using initial computation scheme)

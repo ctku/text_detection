@@ -116,7 +116,7 @@ function [postp, ft_struct, ft_ert] = get_post_prob_by_raw_ER(idx, use_inc, rule
         pool_index = ismember(ft_ert.ft_pool(:,1:4), ft_outvec, 'rows');
         if all(pool_index == 0)
             % calibrated AdaBoost as posterior probability
-            [r_label, score] = predict(ada, ft_outvec);
+            [r_label, score] = predict(ada, ft_outvec(1:4));
             postp = 1./(1+exp(-2*max(score)));  
             % save it for future use
         	ft_ert.ft_pool = [ft_ert.ft_pool; [ft_outvec postp]];

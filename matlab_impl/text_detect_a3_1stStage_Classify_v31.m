@@ -108,7 +108,7 @@ function [postp, ft_struct, ft_ert] = get_post_prob_by_raw_ER(idx, use_inc, rule
        (bb.y_max-bb.y_min+1)/ft_ert.h >= rule_param.MIN_H_REG2IMG_RATIO && ...
        (bb.y_max-bb.y_min+1)/ft_ert.h <= rule_param.MAX_H_REG2IMG_RATIO
         % calibrated AdaBoost as posterior probability
-        [r_label, score] = predict(ada, ft_outvec);
+        [r_label, score] = predict(ada, ft_outvec(1:4));
         postp = 1./(1+exp(-2*max(score)));  
     else
         % size is too small, ignore it.
