@@ -58,7 +58,7 @@ else
             fd_name = fds(i,1).name;
             if ~(strcmp(fd_name(1:6),'Sample') && ...
                  str2double(fd_name(7:9)) <= 62 && ...
-                 fds(i,1).isdir == 0)
+                 fds(i,1).isdir == 1)
                 continue;
             end
             % for each .png file
