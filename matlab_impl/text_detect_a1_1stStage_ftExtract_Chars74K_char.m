@@ -2,7 +2,7 @@ function text_detect_a1_1stStage_ftExtract_Chars74K_char(output_fn)
 
 bad_idx = [253:256 689:692 873:880 933:936];
 addpath_for_me;
-
+tic
 % dataset initialization
 ds_eng = [];
 ds_eng = imdataset('init', 'Chars74K', ds_eng);
@@ -47,7 +47,7 @@ for i=1:ds_eng.no
     p = p + 1;
     ft_vector(p, :) = ft_outvec;
 end
-
+toc
 save([ds_eng.path '_output_files/' output_fn '.mat'], 'ft_vector');
 
 end
