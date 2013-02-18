@@ -528,7 +528,63 @@ end
 
 function [out] = imfeat_reflectpointno_algo(I, cmd1, cmd2)
 
-% MIN_SEG2ALL_RATIO = 0.05; % not yet implement
+% minimum segment/perimeter ratio that will take into account
+MIN_SEG2ALL_RATIO = 0.08;
+
+B = logical(I);
+[B, L] = bwboundaries(B,4,'noholes');
+
+if size(B{1},1) >=9
+    points = [B{1};B{1}(2:3,:)];   % it orders clockwisely
+    no_points = size(points,1);
+    seg_turn = false(1,no_points); % record segment turn label (0:RL,1:LR)
+    seg_len = zeros(1,no_points);  % record segment length
+    MIN_L = max(3, ceil(no_points*MIN_SEG2ALL_RATIO));
+    l2r = 0;
+    r2l = 0;
+    s = 0; l = 0;
+    pre_l = next_locates_at(points(1,:), points(2,:));
+    pre_nonN_d = 'R'; % initial guess
+    for i=2:no_points-1
+        [cur_d, pre_l] = get_turn_direction(pre_l, points(i,:), points(i+1,:));
+        if cur_d~='N'
+            seq = [pre_nonN_d, cur_d];
+            if seq(1)=='R' && seq(2)=='L'
+                pre_nonN_d = cur_d;
+                s = s + 1;
+                seg_len(s) = l;
+                l = 0;
+            elseif seq(1)=='L' && seq(2)=='R'
+                pre_nonN_d = cur_d;
+                s = s + 1;
+                seg_turn(s) = true;
+                seg_len(s) = l;
+                l = 0;
+            end
+        end
+        l = l + 1;
+    end
+    
+    % only keep segments longer than MIN_L to cal no of transition
+    valid_idx = seg_len>0;
+    seg_turn = seg_turn(valid_idx);
+    seg_len = seg_len(valid_idx);
+    valid_turn = seg_turn(seg_len>=MIN_L);
+    out = 0;
+    for i=1:length(valid_turn)-1
+        if valid_turn(i)+valid_turn(i+1)==1
+            out = out + 1;
+        end
+    end
+    % normally, it is expected to be even
+    out = ceil(out/2)*2;
+else
+    out = 0;
+end
+
+end
+
+function [out] = imfeat_reflectpointno_algo_old(I, cmd1, cmd2)
 
 B = logical(I);
 [B, L] = bwboundaries(B,4,'noholes');
@@ -536,7 +592,6 @@ B = logical(I);
 if size(B{1},1) >=9
     points = [B{1};B{1}(2:3,:)];
     no_points = size(points,1);
-    % MIN_L = min(3, ceil(no_points*MIN_SEG2ALL_RATIO));
     l2r = 0;
     r2l = 0;
     pre_l = next_locates_at(points(1,:), points(2,:));
