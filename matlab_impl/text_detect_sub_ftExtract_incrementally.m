@@ -31,6 +31,10 @@ ex5{1} = I_cum;
 ex5{2} = f_cum_hz;
 ex5{3} = ft_struct.ft_hz_pre_data_t - ER.data_t;
 ft5 = imfeat('compute_feature_raw_hzcrossing_incrementally', ex5, ft_bin);
+% the following three features cannot use incremental method
+ft6 = imfeat('extract_feature_raw_holesize_all', '', ft_bin);       % 2nd stage
+ft7 = imfeat('extract_feature_raw_convexhull_all', '', ft_bin);     % 2nd stage
+ft8 = imfeat('extract_feature_raw_reflectpointno_all', '', ft_bin); % 2nd stage
 
 % (3) compute desired features
 % aspect ratio
@@ -48,14 +52,21 @@ else
     median_idx = [1 1 1];
 end
 ft_hz = median(ft5.feat_raw(median_idx));
+% hole area ratio (2nd)
+ft_ho = ft6.feat_raw / ft2.feat_raw;
+% convex hull ratio (2nd)
+ft_ch = ft7.feat_raw / ft2.feat_raw;
+% no of outer boundary reflection point (2nd)
+ft_rf = ft8.feat_raw;
 
-% (4) pack output
-ft_vector = [ft_ar, ft_cp, ft_hl, ft_hz];
+% (3) pack output structure for incremental method
 ft_struct.ft_bb = ft1;
 ft_struct.ft_sz = ft2;
 ft_struct.ft_pr = ft3;
 ft_struct.ft_eu = ft4;
 ft_struct.ft_hz = ft5;
 ft_struct.ft_hz_pre_data_t = ER.data_t;
+
+ft_vector = [ft_ar, ft_cp, ft_hl, ft_hz, ft_ho, ft_ch, ft_rf];
 
 end

@@ -108,17 +108,10 @@ for i=train_seq
         ft_ert = imfeat('resize', rsize, ft_ert);
         
         % (3) extract ER tree feature
-        ent_tic = tic;
         mat_er = util_changeFn(mat_ft, 'replace_extension', ['ert_r' num2str(reverse) '.mat']);
         mat_er = util_changeFn(mat_er, 'cd .._with_filename', '');
         mat_er = util_changeFn(mat_er, 'cd _with_filename', 'ert_mat_files');
-        if exist(mat_er, 'file')
-            load(mat_er);
-        else
-            ft_ert = imfeat('extract_feature_raw_get_all_preproc', reverse, ft_ert);
-            save(mat_er, 'ft_ert');
-        end
-        toc(ent_tic);
+        ft_ert = imfeat('extract_feature_raw_get_all_preproc', reverse, ft_ert);
         
         % (4) extract features for each ER in the tree
         r_tic = tic;
@@ -135,7 +128,7 @@ for i=train_seq
                 if ~ER.isdone
                     
                     % (1) get data and dif of ER
-                    ft_ert = imfeat('extract_feature_raw_get_single_data_and_dif', ER_idx, ft_ert);
+                    ft_ert = imfeat('extract_feature_raw_get_one_cropped_data_and_dif', ER_idx, ft_ert);
                     r = ft_ert.feat_raw;
                     ER = r.tree{ER_idx(1), ER_idx(2)};
                     
@@ -162,7 +155,7 @@ for i=train_seq
                         end
 
                         % (2) get data and dif of ER
-                        ft_ert = imfeat('extract_feature_raw_get_single_data_and_dif', ER_idx, ft_ert);
+                        ft_ert = imfeat('extract_feature_raw_get_one_cropped_data_and_dif', ER_idx, ft_ert);
                         r = ft_ert.feat_raw;
                         ER = r.tree{ER_idx(1), ER_idx(2)};
                         
@@ -172,7 +165,7 @@ for i=train_seq
                         ft_vector(p,:) = ft_outvec;
                         
                         % (4) delete data and dif of ER (release memory)
-                        ft_ert = imfeat('extract_feature_raw_del_single_data_and_dif', ER_idx, ft_ert);
+                        %ft_ert = imfeat('extract_feature_raw_del_data_and_dif', ER_idx, ft_ert);
                         r = ft_ert.feat_raw;
                         
                         % (5) switch to next ER
