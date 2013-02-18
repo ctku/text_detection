@@ -1,7 +1,7 @@
 
 type = 0; % 0:non-char 1:char
 ch_folder_name = '0128_test1_char_mat';
-nc_folder_name = '0203_test1_nonc_mat';
+nc_folder_name = '0218_test1_nonc_mat';
 addpath_for_me;
 
 ds_eng = [];
@@ -13,7 +13,7 @@ if type == 1
 else
     ds_eng = imdataset('get_train_dataset_path', '', ds_eng);
     path = [ds_eng.path '_output_files/'];
-    path = [path '[20130203]_random_2000_nchar.mat'];
+    path = [path '[20130218]_random_2000_nchar.mat'];
     load(path);
     path = [ds_eng.path '_output_files/' nc_folder_name '/'];
     nn = 'nc_100x100_r0';
