@@ -1,4 +1,4 @@
-function text_detect_a3_1stStage_Classify_v31()
+function text_detect_a3_calAdaPostp_noQueue()
 
 close all;
 addpath_for_me;

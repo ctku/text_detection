@@ -1,4 +1,4 @@
-function text_detect_a3_1stStage_Classify_v42(fd, fn, resize, classifier_fn_tag, rules)
+function text_detect_a4_classifyAdaPostp_optSVM_algo1(fd, fn, resize, classifier_fn_tag, rules, useSVM)
 
 close all;
 addpath_for_me;
@@ -52,8 +52,15 @@ for reverse = 0:1
                 c1 = c1 + 1;
 
                 % do 2nd stage classification
-                isChar = svmclassify(svm, ft_ert.feat_raw.tree{t,r}.feat_vec);
-                if isChar
+                if useSVM
+                    isChar = svmclassify(svm, ft_ert.feat_raw.tree{t,r}.feat_vec);
+                    if ~isnan(isChar) && isChar
+                        % save ER as image
+                        s = [out_path 'ER_(' num2str(t) ',' num2str(r) ')_reverse_' num2str(reverse) '.jpg'];
+                        imwrite(data, s, 'jpeg')
+                        c2 = c2 + 1;
+                    end
+                else
                     % save ER as image
                     s = [out_path 'ER_(' num2str(t) ',' num2str(r) ')_reverse_' num2str(reverse) '.jpg'];
                     imwrite(data, s, 'jpeg')

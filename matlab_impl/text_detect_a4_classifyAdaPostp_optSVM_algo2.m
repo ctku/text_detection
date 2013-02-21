@@ -1,4 +1,4 @@
-function text_detect_a3_1stStage_Classify_v41(fd, fn, resize, classifier_fn_tag, rules)
+function text_detect_a4_classifyAdaPostp_optSVM_algo2(fd, fn, resize, classifier_fn_tag, rules)
 
 close all;
 addpath_for_me;
@@ -10,29 +10,39 @@ path = util_changeFn('','cd ..','');
 path = util_changeFn(path,'cd ..','');
 path = util_changeFn(path,'cd _mkdir','_output_files');
 string_fr = [fn '_' num2str(resize(1)) 'x' num2str(resize(2))];
-in_path = path;
-out_path = util_changeFn(path,'cd _mkdir',[time_label ' ' string_fr '_ER_candidate_img' ]);
-load(['../../_output_files/2ndStage_svm_' classifier_fn_tag '.mat'], 'svm');
+in_path = [path 'Parsed_mat/'];
+out_path = util_changeFn([path 'Output_img/'],'cd _mkdir',[time_label ' ' string_fr '_ER_candidate_img' ]);
+load(['../../_output_files/Classifier/2ndStage_svm_' classifier_fn_tag '.mat'], 'svm');
 
 for reverse = 0:1
 
     load([in_path string_fr '_reverse_' num2str(reverse) '.mat']); 
     
     % find index of ER cadidates to be char region
-    idx = [];
     for row = 1:size(pmap,1)
         postp = pmap(row,:);
-        for col=2:length(postp)-1
-            if postp(col) >= rules.PROB_MIN && ...
-               (postp(col)-postp(col-1)) > rules.DELTA_MIN && ...
-               (postp(col)-postp(col+1)) > rules.DELTA_MIN
-                r = ft_ert.feat_raw.fmap(row,col);
-                t = col;
-                if t==12 && r==10
-                    r =r ;
+        idx = (postp>=rules.DELTA_MIN);
+        idx = conv(double(idx), ones(1,rules.MIN_CONSEQ_ER_LEVEL));
+        idx = (idx>=rules.MIN_CONSEQ_ER_LEVEL);
+        isfirst = 1;
+        for i=1:length(idx)
+            if idx(i)==1
+                if isfirst==1
+                    isfirst = 0;
+                    % first idx t of these consequtive ERs
+                    t = i-rules.MIN_CONSEQ_ER_LEVEL+1; 
+                    r = ft_ert.feat_raw.fmap(row,t);
+                    % label is_done as 2 to indicate ER candidate
+                    ft_ert.feat_raw.tree{t,r}.isdone = 2; 
+                else
+                    if idx(i+1)==0
+                        % last idx t of these consequtive ERs
+                        t = i;
+                        r = ft_ert.feat_raw.fmap(row,t);
+                        % label is_done as 2 to indicate ER candidate
+                        ft_ert.feat_raw.tree{t,r}.isdone = 2; 
+                    end
                 end
-                % label is_done as 2 to indicate ER candidate
-                ft_ert.feat_raw.tree{t,r}.isdone = 2; 
             end
         end
     end
@@ -52,8 +62,15 @@ for reverse = 0:1
                 c1 = c1 + 1;
 
                 % do 2nd stage classification
-                isChar = 1;%svmclassify(svm, ft_ert.feat_raw.tree{t,r}.feat_vec);
-                if isChar
+                if useSVM
+                    isChar = svmclassify(svm, ft_ert.feat_raw.tree{t,r}.feat_vec);
+                    if ~isnan(isChar) && isChar
+                        % save ER as image
+                        s = [out_path 'ER_(' num2str(t) ',' num2str(r) ')_reverse_' num2str(reverse) '.jpg'];
+                        imwrite(data, s, 'jpeg')
+                        c2 = c2 + 1;
+                    end
+                else
                     % save ER as image
                     s = [out_path 'ER_(' num2str(t) ',' num2str(r) ')_reverse_' num2str(reverse) '.jpg'];
                     imwrite(data, s, 'jpeg')

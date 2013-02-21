@@ -1,6 +1,6 @@
 % version 3.2
 % feature : indexing post prob
-function text_detect_a3_1stStage_Classify_v32(fd, fn, resize, classifier_fn_tag, rules)
+function text_detect_a3_calAdaPostp(fd, fn, resize, classifier_fn_tag, rules)
 
 close all;
 addpath_for_me;
@@ -17,18 +17,19 @@ ft_ert = imfeat('init', 'ertree', ft_ert);
 ft_bin = imfeat('init', 'binary', ft_bin);
 
 % extract ER tree feature 
-I_path = [ds_eng.path fd '/' fn '.JPG'];
+I_path = [ds_eng.path fd fn];
 I = imread(I_path);
 ft_ert = imfeat('set_image', I, ft_ert);
 ft_ert = imfeat('convert', '', ft_ert);
 ft_ert = imfeat('resize', resize, ft_ert);
 
 % load trained AdaBoostM1
-load(['../../_output_files/1stStage_ada_' classifier_fn_tag '.mat']); 
+load(['../../_output_files/Classifier/1stStage_ada_' classifier_fn_tag '.mat']); 
 ft_ert.ft_pool = [0 0 0 0 0];
 path = util_changeFn('','cd ..','');
 path = util_changeFn(path,'cd ..','');
 path = util_changeFn(path,'cd _mkdir','_output_files');
+path = util_changeFn(path,'cd _mkdir','Output_img');
 for reverse = 0:1
     
     ft_ert = imfeat('extract_feature_raw_get_all_preproc', reverse, ft_ert);
