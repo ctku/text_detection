@@ -1,4 +1,4 @@
-function text_detect_a3_1stStage_Classify_v41(fd, fn, resize, classifier_fn_tag, rules)
+function text_detect_a3_1stStage_Classify_v42(fd, fn, resize, classifier_fn_tag, rules)
 
 close all;
 addpath_for_me;
@@ -52,7 +52,7 @@ for reverse = 0:1
                 c1 = c1 + 1;
 
                 % do 2nd stage classification
-                isChar = 1;%svmclassify(svm, ft_ert.feat_raw.tree{t,r}.feat_vec);
+                isChar = svmclassify(svm, ft_ert.feat_raw.tree{t,r}.feat_vec);
                 if isChar
                     % save ER as image
                     s = [out_path 'ER_(' num2str(t) ',' num2str(r) ')_reverse_' num2str(reverse) '.jpg'];
@@ -72,7 +72,7 @@ for reverse = 0:1
         original_img = 255 - ft_ert.image;
     end
     imwrite(original_img, s, 'jpeg')
-
+    
     % save normal MSER (for reference)
     if 0
     im = [];

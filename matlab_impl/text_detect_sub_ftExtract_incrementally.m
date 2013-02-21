@@ -32,6 +32,7 @@ ex5{2} = f_cum_hz;
 ex5{3} = ft_struct.ft_hz_pre_data_t - ER.data_t;
 ft5 = imfeat('compute_feature_raw_hzcrossing_incrementally', ex5, ft_bin);
 % the following three features cannot use incremental method
+ft_bin = imfeat('set_image', I_cum, ft_bin);
 ft6 = imfeat('extract_feature_raw_holesize_all', '', ft_bin);       % 2nd stage
 ft7 = imfeat('extract_feature_raw_convexhull_all', '', ft_bin);     % 2nd stage
 ft8 = imfeat('extract_feature_raw_reflectpointno_all', '', ft_bin); % 2nd stage

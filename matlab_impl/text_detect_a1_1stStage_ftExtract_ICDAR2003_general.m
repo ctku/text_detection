@@ -1,4 +1,4 @@
-function text_detect_a1_1stStage_ftExtract_ICDAR2003_general(type, reverse, folder_name, random_cmd, order)
+function text_detect_a1_1stStage_ftExtract_ICDAR2003_general(type, reverse, rules, folder_name, random_param, order)
 
 %  Input - type (int): 0: extract features of "non-char" patches
 %                      1: extract features of "char" patches
@@ -7,11 +7,13 @@ function text_detect_a1_1stStage_ftExtract_ICDAR2003_general(type, reverse, fold
 %                            (assume text is brighter than background)
 %                         1: reverse image gray level as "255-I"
 %                            (assume text is darker than background)
+%        - rules (structure): some rule parameters
 %        - folder_name (string): output folder name, will be created at
 %                                $databasepath\_output_files\folder_name
-%        - random_cmd (1x2 cells): used for random non-char method
+%        - random_param (1x3 cells): used for random non-char method
 %                       {1} (int): number of patches need to be randomed
-%                       {2} (string): sequence id
+%                       {2} (string): random seed id
+%                       {3} (1x2 vec): resize size
 %        - order (string): used when several computers runing on the same dataset
 %                FxxxP: means running forward from xxx percent of images
 %                BxxxP: means running backward from xxx percent of images
@@ -33,17 +35,18 @@ switch type
     case 0
         ds_eng = imdataset('get_train_dataset_path', '', ds_eng);
         path = util_changeFn(ds_eng.path, 'cd _mkdir', '_output_files');
-        random_no = random_cmd{1};
-        random_id = random_cmd{2};
-        path = [path '[' random_id ']_random_' num2str(random_no) '_nchar.mat'];
+        ran_no = random_param{1};
+        ran_seed = random_param{2};
+        ran_resize = random_param{3};
+        path = [path '[' ran_seed ']_random_' num2str(ran_no) '_nchar.mat'];
         if exist(path, 'file')
             load(path);
         else
-            ds_eng = imdataset('get_train_dataset_random_nonchar', random_no, ds_eng);
+            ds_eng = imdataset('get_train_dataset_random_nonchar', ran_no, ds_eng);
             save(path, 'ds_eng');
         end
-        rsize = [100 100];
-        nn = ['nc_100x100_r' num2str(reverse)];
+        rsize = ran_resize;
+        nn = ['nc_' num2str(rsize(1)) 'x' num2str(rsize(2)) '_r' num2str(reverse)];
     case 1
         ds_eng = imdataset('get_train_dataset_defxml_char', '', ds_eng);
         rsize = [0 0];
@@ -153,7 +156,7 @@ for i=train_seq
                             ER = r.tree{ER_idx(1), ER_idx(2)};
                             continue;
                         end
-
+   
                         % (2) get data and dif of ER
                         ft_ert = imfeat('extract_feature_raw_get_one_cropped_data_and_dif', ER_idx, ft_ert);
                         r = ft_ert.feat_raw;
@@ -161,13 +164,21 @@ for i=train_seq
                         
                         % (3) extract feature vector (by using incrmental computation scheme)
                         [ft_outvec, ft_struct] = text_detect_sub_ftExtract_incrementally(ER, ft_struct, ft_bin);
-                        p = p + 1;
-                        ft_vector(p,:) = ft_outvec;
                         
-                        % (4) delete data and dif of ER (release memory)
-                        %ft_ert = imfeat('extract_feature_raw_del_data_and_dif', ER_idx, ft_ert);
-                        r = ft_ert.feat_raw;
+                        % (4) check if it qualifies size rules
+                        bb = ft_struct.ft_bb.feat_raw;
+                        if (bb.x_max-bb.x_min+1)/ft_ert.w >= rules.MIN_W_REG2IMG_RATIO && ...
+                           (bb.x_max-bb.x_min+1)/ft_ert.w <= rules.MAX_W_REG2IMG_RATIO && ...
+                           (bb.y_max-bb.y_min+1)/ft_ert.h >= rules.MIN_H_REG2IMG_RATIO && ...
+                           (bb.y_max-bb.y_min+1)/ft_ert.h <= rules.MAX_H_REG2IMG_RATIO && ...
+                           (bb.x_max-bb.x_min+1) >= rules.MIN_W_ABS && ...
+                           (bb.y_max-bb.y_min+1) >= rules.MIN_H_ABS && ...
+                           sum(sum(ER.data)) >= rules.MIN_SIZE
                         
+                            p = p + 1;
+                            ft_vector(p,:) = ft_outvec;
+                        end
+
                         % (5) switch to next ER
                         r.tree{ER_idx(1),ER_idx(2)}.isdone = 1;
                         ER_idx = ER.par;

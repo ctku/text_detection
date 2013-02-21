@@ -1,22 +1,26 @@
+function complete_map = text_detect_v2_checkProgress(type, folder_name, random_param)
 
-type = 0; % 0:non-char 1:char
-ch_folder_name = '0128_test1_char_mat';
-nc_folder_name = '0218_test1_nonc_mat';
+% type = 0; % 0:non-char 1:char
+% folder_name = '0128_test1_char_mat';
+% folder_name = '0218_test1_nonc_mat';
 addpath_for_me;
 
 ds_eng = [];
 ds_eng = imdataset('init', 'ICDAR2003RobustReading', ds_eng);
 if type == 1
     ds_eng = imdataset('get_train_dataset_defxml_char', '', ds_eng);
-    path = [ds_eng.path '_output_files/' ch_folder_name '/'];
+    path = [ds_eng.path '_output_files/' folder_name '/'];
     nn = 'ch_0x0_r0';
 else
+    ran_no = random_param{1};
+    ran_seed = random_param{2};
+    ran_resize = random_param{3};
     ds_eng = imdataset('get_train_dataset_path', '', ds_eng);
     path = [ds_eng.path '_output_files/'];
-    path = [path '[20130218]_random_2000_nchar.mat'];
+    path = [path '[' ran_seed ']_random_' num2str(ran_no) '_nchar.mat'];
     load(path);
-    path = [ds_eng.path '_output_files/' nc_folder_name '/'];
-    nn = 'nc_100x100_r0';
+    path = [ds_eng.path '_output_files/' folder_name '/'];
+    nn = ['nc_' num2str(ran_resize(1)) 'x' num2str(ran_resize(2)) '_r0'];
 end
 
 no_patch = 0;
@@ -45,3 +49,5 @@ cpl = (sum(sum(complete_map==1))/no_patch)*100;
 a = clock;
 fprintf('\n[%02d/%02d %02d:%02d:%02d] complete %02.2f%%\n\n', ...
          a(2), a(3), a(4), a(5), round(a(6)), round(cpl*100)/100);
+     
+end
