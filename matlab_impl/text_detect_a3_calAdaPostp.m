@@ -29,9 +29,15 @@ ft_ert.ft_pool = [0 0 0 0 0];
 path = util_changeFn('','cd ..','');
 path = util_changeFn(path,'cd ..','');
 path = util_changeFn(path,'cd _mkdir','_output_files');
-path = util_changeFn(path,'cd _mkdir','Output_img');
+path = util_changeFn(path,'cd _mkdir','Parsed_mat');
 for reverse = 0:1
     
+    % if it's parsed, jump to next
+    mat_ft = [path fn '_' num2str(resize(1)) 'x' num2str(resize(2)) '_reverse_' num2str(reverse) '.mat'];
+    if exist(mat_ft, 'file')
+        continue;
+    end
+
     ft_ert = imfeat('extract_feature_raw_get_all_preproc', reverse, ft_ert);
     pmap = zeros(size(ft_ert.feat_raw.fmap))-1;
     for t = 1:255

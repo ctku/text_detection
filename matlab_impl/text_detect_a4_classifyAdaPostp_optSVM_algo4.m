@@ -1,4 +1,4 @@
-function text_detect_a4_classifyAdaPostp_optSVM_algo2(fd, fn, resize, classifier_fn_tag, rules, useSVM)
+function text_detect_a4_classifyAdaPostp_optSVM_algo4(fd, fn, resize, classifier_fn_tag, rules, useSVM)
 
 close all;
 addpath_for_me;
@@ -19,34 +19,48 @@ for reverse = 0:1
     load([in_path string_fr '_reverse_' num2str(reverse) '.mat']); 
     
     % find index of ER cadidates to be char region
+    idx = [];
+    % fill up -1 with previous postp
     for row = 1:size(pmap,1)
         postp = pmap(row,:);
-        idx = (postp>=rules.DELTA_MIN);
-        idx = conv(double(idx), ones(1,rules.MIN_CONSEQ_ER_LEVEL));
-        idx = (idx>=rules.MIN_CONSEQ_ER_LEVEL);
-        isfirst = 1;
-        for i=1:length(idx)
-            if idx(i)==1
-                if isfirst==1
-                    isfirst = 0;
-                    % first idx t of these consequtive ERs
-                    t = i-rules.MIN_CONSEQ_ER_LEVEL+1; 
-                    r = ft_ert.feat_raw.fmap(row,t);
-                    % label is_done as 2 to indicate ER candidate
-                    ft_ert.feat_raw.tree{t,r}.isdone = 2; 
-                else
-                    if idx(i+1)==0
-                        % last idx t of these consequtive ERs
-                        t = i;
-                        r = ft_ert.feat_raw.fmap(row,t);
-                        % label is_done as 2 to indicate ER candidate
-                        ft_ert.feat_raw.tree{t,r}.isdone = 2; 
-                    end
+        in_valley = 0;
+        for col=2:length(postp)-1
+            if postp(col)==-1
+                if postp(col-1)>=0 || in_valley
+                    in_valley = 1;
+                    postp(col) = postp(col-1);
+                end
+            else
+                in_valley = 0;
+            end
+        end
+    end
+    % prune by prob relation
+    for row = 1:size(pmap,1)
+        postp = pmap(row,:);
+        for col=2:length(postp)-1
+            if postp(col) >= rules.PROB_MIN && ...
+               (postp(col)-postp(col-1)) > rules.DELTA_MIN && ...
+               (postp(col)-postp(col+1)) > rules.DELTA_MIN
+                r = ft_ert.feat_raw.fmap(row,col);
+                t = col;
+                % label is_done as 2 to indicate ER candidate
+                ft_ert.feat_raw.tree{t,r}.isdone = 2; 
+            end
+        end
+    end
+    % prune ERs belongs to the same seq by keeping last one
+    for t=1:255
+        for r = 1:ft_ert.feat_raw.size(t)
+            if ft_ert.feat_raw.tree{t,r}.isdone == 2
+                par = ft_ert.feat_raw.tree{t,r}.par;
+                % if parent is also candidate, mark self as non-candidate
+                if ft_ert.feat_raw.tree{par(1),par(2)}.isdone == 2
+                    ft_ert.feat_raw.tree{t,r}.isdone = 1;
                 end
             end
         end
     end
-
     % save ER candidates as images
     c1 = 0; c2 = 0;
     for t=1:255
@@ -99,7 +113,7 @@ for reverse = 0:1
         I_accum = I | I_accum;
     end
     s = [out_path '__[1]accum_' num2str(c2) 'ERs_reverse_' num2str(reverse) '.png'];
-    imwrite(I_accum, s, 'png');
+    imwrite(I_accum, s, 'png')
     
     % save normal MSER (for reference)
     if 0

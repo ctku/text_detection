@@ -1,11 +1,11 @@
-function text_detect_a4_classifyAdaPostp_optSVM_algo2(fd, fn, resize, classifier_fn_tag, rules, useSVM)
+function text_detect_a4_classifyAdaPostp_optSVM_algo5(fd, fn, img_idx, resize, classifier_fn_tag, rules, useSVM)
 
 close all;
 addpath_for_me;
 tic
 
 a = clock;
-time_label = sprintf('[%02d%02d_%02d%02d]', a(2), a(3), a(4), a(5));
+time_label = sprintf('[%03d][%02d%02d_%02d%02d]', img_idx, a(2), a(3), a(4), a(5));
 path = util_changeFn('','cd ..','');
 path = util_changeFn(path,'cd ..','');
 path = util_changeFn(path,'cd _mkdir','_output_files');
@@ -19,34 +19,62 @@ for reverse = 0:1
     load([in_path string_fr '_reverse_' num2str(reverse) '.mat']); 
     
     % find index of ER cadidates to be char region
+    idx = [];
+    % fill up -1 with previous postp
     for row = 1:size(pmap,1)
         postp = pmap(row,:);
-        idx = (postp>=rules.DELTA_MIN);
-        idx = conv(double(idx), ones(1,rules.MIN_CONSEQ_ER_LEVEL));
-        idx = (idx>=rules.MIN_CONSEQ_ER_LEVEL);
-        isfirst = 1;
-        for i=1:length(idx)
-            if idx(i)==1
-                if isfirst==1
-                    isfirst = 0;
-                    % first idx t of these consequtive ERs
-                    t = i-rules.MIN_CONSEQ_ER_LEVEL+1; 
-                    r = ft_ert.feat_raw.fmap(row,t);
-                    % label is_done as 2 to indicate ER candidate
-                    ft_ert.feat_raw.tree{t,r}.isdone = 2; 
-                else
-                    if idx(i+1)==0
-                        % last idx t of these consequtive ERs
-                        t = i;
-                        r = ft_ert.feat_raw.fmap(row,t);
-                        % label is_done as 2 to indicate ER candidate
-                        ft_ert.feat_raw.tree{t,r}.isdone = 2; 
-                    end
+        in_valley = 0;
+        for col=2:length(postp)-1
+            if postp(col)==-1
+                if postp(col-1)>=0 || in_valley
+                    in_valley = 1;
+                    postp(col) = postp(col-1);
                 end
+            else
+                in_valley = 0;
             end
         end
     end
-
+    % prune by prob relation
+    for row = 1:size(pmap,1)
+        postp = pmap(row,:);
+        for col=2:length(postp)-1
+            if postp(col) >= rules.PROB_MIN && ...
+               (postp(col)-postp(col-1)) > rules.DELTA_MIN && ...
+               (postp(col)-postp(col+1)) > rules.DELTA_MIN
+                r = ft_ert.feat_raw.fmap(row,col);
+                t = col;
+                % label is_done as 2 to indicate ER candidate
+                ft_ert.feat_raw.tree{t,r}.isdone = 2; 
+            end
+        end
+    end
+    % transform pmap to candidate map
+    for t=1:255
+        for r = 1:ft_ert.feat_raw.size(t)
+            if ft_ert.feat_raw.tree{t,r}.isdone == 2
+                fst = ft_ert.feat_raw.tree{t,r}.raw(3);
+                num = ft_ert.feat_raw.tree{t,r}.raw(2);
+                vec = fst:fst+num-1;
+                pmap(vec,t) = 2;
+            end
+        end
+    end
+    % prune ERs belongs to the same seq by keeping last one
+    for row = 1:size(pmap,1)
+        postp = pmap(row,:);
+        idx = find(postp==2);
+        for i=idx(1:end-1)
+            t = i;
+            r = ft_ert.feat_raw.fmap(row,t);
+            ft_ert.feat_raw.tree{t,r}.isdone = 1;
+            
+            fst = ft_ert.feat_raw.tree{t,r}.raw(3);
+            num = ft_ert.feat_raw.tree{t,r}.raw(2);
+            vec = fst:fst+num-1;
+            pmap(vec,t) = 0;
+        end
+    end
     % save ER candidates as images
     c1 = 0; c2 = 0;
     for t=1:255
@@ -89,17 +117,19 @@ for reverse = 0:1
         original_img = 255 - ft_ert.image;
     end
     imwrite(original_img, s, 'png')
-
+    
     % save accum image (for reference)
-    fns = dir([out_path 'ER*_' num2str(reverse) '.png']);
-    [H,W] = size(imread([out_path fns(1,1).name]));
-    I_accum = false(H,W);
-    for i=1:numel(fns)
-        I = logical(imread([out_path fns(i,1).name])); 
-        I_accum = I | I_accum;
+    if c2>0
+        fns = dir([out_path 'ER*_' num2str(reverse) '.png']);
+        [H,W] = size(imread([out_path fns(1,1).name]));
+        I_accum = false(H,W);
+        for i=1:numel(fns)
+            I = logical(imread([out_path fns(i,1).name])); 
+            I_accum = I | I_accum;
+        end
+        s = [out_path '__[1]accum_' num2str(c2) 'ERs_reverse_' num2str(reverse) '.png'];
+        imwrite(I_accum, s, 'png');
     end
-    s = [out_path '__[1]accum_' num2str(c2) 'ERs_reverse_' num2str(reverse) '.png'];
-    imwrite(I_accum, s, 'png');
     
     % save normal MSER (for reference)
     if 0
@@ -116,7 +146,7 @@ for reverse = 0:1
     plot(im.feat_raw, 'showEllipses',false, 'showPixelList',true);
     [X, map] = frame2im(getframe(gca));
     s = [out_path '__[2]mser_image_reverse_' num2str(reverse) '.png'];
-    imwrite(X, s, 'png')
+    imwrite(X, s, 'jpeg')
     hold off;
     close(gcf);
     end
