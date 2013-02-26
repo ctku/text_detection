@@ -78,11 +78,9 @@ for reverse = 0:1
             area_var = ones(1,length(postp));
             for i=1:length(idx)
                 if i==1
-                    [cur_t,cur_r] = row_col_2_cur_t_r(ft_ert, row, idx(i));
-                    [nxt_t,nxt_r] = row_col_2_cur_t_r(ft_ert, row, idx(i+1));
-                    area_var(idx(i)) = (double(ft_ert.feat_raw.tree{nxt_t,nxt_r}.raw(2)) ...
-                                       -double(ft_ert.feat_raw.tree{cur_t,cur_r}.raw(2))) ...
-                                       /double(ft_ert.feat_raw.tree{cur_t,cur_r}.raw(2));
+                    % when over two candidates exists, the 1st one tends to 
+                    % have bad shape compared to later one
+                    area_var(idx(i))=1;
                     continue;
                 end
                 if i==length(idx)
@@ -203,18 +201,6 @@ function [t,r] = row_col_2_cur_t_r(ft_ert, row, col)
     t = col;
     while ft_ert.feat_raw.fmap(row,t)==0
         t = t + 1;
-    end
-    r = ft_ert.feat_raw.fmap(row,t);
-end
-
-function [t,r] = row_col_2_chd_t_r(ft_ert, row, col)
-    t = col;
-    while ft_ert.feat_raw.fmap(row,t)==0
-        t = t - 1;
-        if t==0
-            t = col;
-            break;
-        end
     end
     r = ft_ert.feat_raw.fmap(row,t);
 end

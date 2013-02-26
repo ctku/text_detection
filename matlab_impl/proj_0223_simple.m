@@ -28,8 +28,8 @@ addpath_for_me;
 ds_eng = [];
 ds_eng = imdataset('init', 'ICDAR2003RobustReading', ds_eng);
 ds_eng = imdataset('get_test_dataset_defxml_word', 'ICDAR2003RobustReading', ds_eng);
-simple_idx = [2,3,6,11,21,26,30,46];
-% simple_idx = 3;
+simple_idx = [2,3,6,11,21,26,30,46,51,55,65];
+simple_idx = [55];
 for i=simple_idx
 
     TEST_IMG_FOLDER = util_changeFn(ds_eng.fn_list{i}, 'remove_filename_and_extension', '');
