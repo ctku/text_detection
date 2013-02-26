@@ -1,7 +1,7 @@
 
 
 
-load('../../_output_files/Parsed_mat/IMG_1291.JPG_200x200_reverse_0.mat'); 
+load('../../_output_files/Output_img/Parsed_mat/[003] aPICT0036.JPG_200x200_reverse_0.mat'); 
 
 % fill up -1 with previous postp
 for row = 1:size(pmap,1)
@@ -38,8 +38,8 @@ while(1)
         TR_data = false(1, ft_ert.w*ft_ert.h);
         TR_data(vec) = 1;
         data = reshape(TR_data, ft_ert.w, ft_ert.h)'; % row-wised reshape
-        figure(2); imshow(data); pause(1);
+        figure(2); imshow(data); title(['ER=(' num2str(t) ',' num2str(r) ') fst=(' num2str(fst) ')']); pause(1);
     else
-        figure(2); imshow(false(ft_ert.h,ft_ert.w)); pause(1);
+        figure(2); imshow(false(ft_ert.h,ft_ert.w)); title('No ER is found'); pause(1);
     end
 end

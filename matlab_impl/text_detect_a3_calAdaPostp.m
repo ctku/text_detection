@@ -29,6 +29,7 @@ ft_ert.ft_pool = [0 0 0 0 0];
 path = util_changeFn('','cd ..','');
 path = util_changeFn(path,'cd ..','');
 path = util_changeFn(path,'cd _mkdir','_output_files');
+path = util_changeFn(path,'cd _mkdir','Output_img');
 path = util_changeFn(path,'cd _mkdir','Parsed_mat');
 for reverse = 0:1
     

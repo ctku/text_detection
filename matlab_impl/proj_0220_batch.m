@@ -28,11 +28,11 @@ ds_eng = [];
 ds_eng = imdataset('init', 'ICDAR2003RobustReading', ds_eng);
 ds_eng = imdataset('get_test_dataset_defxml_word', 'ICDAR2003RobustReading', ds_eng);
 
-for i=1:ds_eng.no
+for i=3%1:ds_eng.no
 
     TEST_IMG_FOLDER = util_changeFn(ds_eng.fn_list{i}, 'remove_filename_and_extension', '');
     TEST_IMG_FILENAME = util_changeFn(ds_eng.fn_list{i}, 'get_filename_and_extension', '')
-    TEST_IMG_RESIZE = [200,200];
+    TEST_IMG_RESIZE = [400,400];
 
     switch stage
         case 1

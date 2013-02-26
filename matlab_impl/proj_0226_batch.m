@@ -1,5 +1,5 @@
 
-function out = proj_0223_simple(stage, cmd1)
+function out = proj_0226_batch(stage, cmd1)
 
 PROJ_NAME = '20130218';
 
@@ -28,13 +28,13 @@ addpath_for_me;
 ds_eng = [];
 ds_eng = imdataset('init', 'ICDAR2003RobustReading', ds_eng);
 ds_eng = imdataset('get_test_dataset_defxml_word', 'ICDAR2003RobustReading', ds_eng);
-simple_idx = [2,3,6,11,21,26,30,46];
-% simple_idx = 3;
-for i=simple_idx
+
+for i=1:ds_eng.no
 
     TEST_IMG_FOLDER = util_changeFn(ds_eng.fn_list{i}, 'remove_filename_and_extension', '');
-    TEST_IMG_FILENAME = util_changeFn(ds_eng.fn_list{i}, 'get_filename_and_extension', '')
-    TEST_IMG_RESIZE = [200,200];
+    TEST_IMG_FILENAME = util_changeFn(ds_eng.fn_list{i}, 'get_filename_and_extension', '');
+    TEST_IMG_RESIZE = [400,400];
+    ['[' num2str(i) ']' TEST_IMG_FILENAME]
 
     switch stage
         case 1
