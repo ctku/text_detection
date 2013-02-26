@@ -12,6 +12,8 @@ switch pos
         fn_out(last_dot:last_dot+pt_len-1) = patt;
         fn_out(last_dot+pt_len:last_dot++pt_len+dae_len-1) = dot_and_ext;
     case 'replace_extension'
+        fn_out = '';
+        fn_out(1:last_dot) = fn_in(1:last_dot);
         fn_out(last_dot+1:last_dot+pt_len) = patt;
     case 'get_filename_and_extension'
         last_slash = max(strfind(fn_in,'/'));

@@ -17,6 +17,8 @@ switch cmd1
                 param = imdataset_ICDAR2003RobustReading(cmd1, cmd2, param);
         	case 'Chars74K'
                 param = imdataset_Chars74K(cmd1, cmd2, param);
+        	case 'MSRATD500'
+                param = imdataset_MSRATD500(cmd1, cmd2, param);
             otherwise
                 warning('Please initialize the dataset first!');
                 param.prv.ret = -1;
