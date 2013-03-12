@@ -1,0 +1,17 @@
+﻿Build started 3/12/2013 1:15:19 PM.
+     1>Project "C:\Users\ctku\Dropbox_ku.chung.ta\Dropbox\KCD_Research\Codes\text_detection\c_impl\c_component_impl\c_implement\c_implement.vcxproj" on node 2 (build target(s)).
+     1>InitializeBuildStatus:
+         Creating "Debug\c_implement.unsuccessfulbuild" because "AlwaysCreate" was specified.
+       ClCompile:
+         All outputs are up-to-date.
+       Link:
+         All outputs are up-to-date.
+         c_implement.vcxproj -> C:\Users\ctku\Dropbox_ku.chung.ta\Dropbox\KCD_Research\Codes\text_detection\c_impl\c_component_impl\Debug\c_implement.exe
+       FinalizeBuildStatus:
+         Deleting file "Debug\c_implement.unsuccessfulbuild".
+         Touching "Debug\c_implement.lastbuildstate".
+     1>Done Building Project "C:\Users\ctku\Dropbox_ku.chung.ta\Dropbox\KCD_Research\Codes\text_detection\c_impl\c_component_impl\c_implement\c_implement.vcxproj" (build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:00.08
