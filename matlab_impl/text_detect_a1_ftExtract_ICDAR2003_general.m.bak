@@ -34,8 +34,7 @@ ds_eng = imdataset('init', 'ICDAR2003RobustReading', ds_eng);
 switch type
     case 0
         ds_eng = imdataset('get_train_dataset_path', '', ds_eng);
-        path = util_changeFn(ds_eng.path, 'cd ..', '');
-        path = util_changeFn(path, 'cd _mkdir', '_output_files');
+        path = util_changeFn(ds_eng.path, 'cd _mkdir', '_output_files');
         ran_no = random_param{1};
         ran_seed = random_param{2};
         ran_resize = random_param{3};
@@ -77,11 +76,9 @@ if order(1)=='B' && order(5)=='N'
     train_seq = str2double(order(2:4)):-1:1;
 end
 for i=train_seq
-    file = util_changeFn(ds_eng.fn_list{i}, 'get_filename_and_extension', '');
-    path = util_changeFn(ds_eng.fn_list{i}, 'remove_filename_and_extension', '');
-    path = util_changeFn(path, 'cd ..', '');
-    path = util_changeFn(path, 'cd _mkdir', '_output_files');
-    path = util_changeFn(path, 'cd _mkdir', folder_name);
+    path = util_changeFn(ds_eng.fn_list{i}, 'cd .._with_filename', '');
+    path = util_changeFn(path, 'cd _mkdir_with_filename', '_output_files');
+    path = util_changeFn(path, 'cd _mkdir_with_filename', folder_name);
     
     % for each test image
     img = imread(ds_eng.fn_list{i});
@@ -90,8 +87,7 @@ for i=train_seq
         % for each rect region
         
         % if it's trained, jump to next
-        mat_ft = [path '[' sprintf('%03d', i) '] ' file];
-        mat_ft = util_changeFn(mat_ft, 'replace_extension', [nn '.' num2str(ii) '.mat']);
+        mat_ft = util_changeFn(path, 'replace_extension', [nn '.' num2str(ii) '.mat']);
         if exist(mat_ft, 'file')
             continue;
         end

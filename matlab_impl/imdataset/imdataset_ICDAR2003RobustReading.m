@@ -303,7 +303,13 @@ for i=1:no
                 rect = util_regionSubtract(rect, param.att{idx,r});
             end
         end
-
+        % subtract regions that have been randomed
+        if att_region_no(idx)>0
+            for r=1:att_region_no(idx)
+                rect = util_regionSubtract(rect, att{idx,r});
+            end
+        end
+        
         % check if bad case happened
         if rect.w<MIN_REGION_W || rect.h<MIN_REGION_H ||...
            ((rect.w*rect.h)/(param.res(idx).w*param.res(idx).h))>MAX_REGION_TO_IMAGE_RATIO

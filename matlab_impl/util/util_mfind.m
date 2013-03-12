@@ -1,4 +1,4 @@
-function [I B] = mfind(M, X)
+function [I B] = util_mfind(M, X)
 
 % find a row or a column?
 if(size(X,2) == 1);

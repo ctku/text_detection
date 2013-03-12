@@ -38,6 +38,18 @@ switch cmd1
                 param.h = round(param.h * rt_h);        
             end
             param.image = imresize(param.image, [param.h param.w]);
+            if strcmp(param.prv.feat_name, 'binary') && ~islogical(param.image)
+                param.image = 255*(param.image>=128);
+            end
+        end
+    case 'resize_no_keep_ar'
+        if ~isequal(cmd2, [0,0])
+            param.w = cmd2(1);
+            param.h = cmd2(2);
+            param.image = imresize(param.image, [param.h param.w]);
+            if strcmp(param.prv.feat_name, 'binary') && ~islogical(param.image)
+                param.image = 255*(param.image>=128);
+            end
         end
     otherwise
         switch param.prv.feat_name
@@ -55,6 +67,10 @@ switch cmd1
                 param = imfeat_ertree(cmd1, cmd2, param);
         	case 'binary'
                 param = imfeat_binary(cmd1, cmd2, param);
+            case 'hog'
+                param = imfeat_hog(cmd1, cmd2, param);
+            case 'hiercentroid'
+                param = imfeat_hiercentroid(cmd1, cmd2, param);
             otherwise
                 warning('Please initialize the feature first!');
                 param.prv.ret = -1;

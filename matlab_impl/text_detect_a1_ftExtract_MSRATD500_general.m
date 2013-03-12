@@ -1,8 +1,6 @@
-function text_detect_a1_ftExtract_ICDAR2003_general(type, reverse, rules, folder_name, random_param, order)
+function text_detect_a1_ftExtract_MSRATD500_general(type, reverse, rules, folder_name, random_param, order)
 
 %  Input - type (int): 0: extract features of "non-char" patches
-%                      1: extract features of "char" patches
-%                      2: extract features of "word" patches (not used)
 %        - reverse (int): 0: keep image gray level unchanged
 %                            (assume text is brighter than background)
 %                         1: reverse image gray level as "255-I"
@@ -30,7 +28,7 @@ open_profile = 0;
 
 % dataset initialization
 ds_eng = [];
-ds_eng = imdataset('init', 'ICDAR2003RobustReading', ds_eng);
+ds_eng = imdataset('init', 'MSRATD500', ds_eng);
 switch type
     case 0
         ds_eng = imdataset('get_train_dataset_path', '', ds_eng);
@@ -48,14 +46,6 @@ switch type
         end
         rsize = ran_resize;
         nn = ['nc_' num2str(rsize(1)) 'x' num2str(rsize(2)) '_r' num2str(reverse)];
-    case 1
-        ds_eng = imdataset('get_train_dataset_defxml_char', '', ds_eng);
-        rsize = [0 0];
-        nn = ['ch_0x0_r' num2str(reverse)];
-    case 2
-        ds_eng = imdataset('get_train_dataset_defxml_word', '', ds_eng);
-        rsize = [0 0];
-        nn = ['ch_0x0_r' num2str(reverse)];
 end
 
 % feature initialization

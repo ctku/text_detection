@@ -3,13 +3,6 @@ function [param] = imfeat_binary(cmd1, cmd2, param)
 switch cmd1
     case 'initialization'
         param.rd.mode = 'binary';
-%     case 'compute_feature_raw_aspectratio_incrementally'
-%         param.feat_raw = imfeat_aspectratio_algo(param.image, cmd1, cmd2);
-%     case 'compute_feature_raw_compactness_incrementally'
-%         param.feat_raw = imfeat_compactness_algo(param.image, cmd1, cmd2);
-%     case {'extract_feature_raw_numofhole_all', ...
-%           'extract_feature_raw_numofhole_givenchkpt'}
-%         param.feat_raw = imfeat_numofhole_algo(param.image, cmd1, cmd2);
     case {'extract_feature_raw_size_all', ...
           'extract_feature_raw_size_givenchkpt', ...
           'compute_feature_raw_size_incrementally'}
@@ -37,68 +30,13 @@ switch cmd1
         param.feat_raw = imfeat_holesize_algo(param.image, cmd1, cmd2);
     case {'extract_feature_raw_reflectpointno_all'}
         param.feat_raw = imfeat_reflectpointno_algo(param.image, cmd1, cmd2);
+    case {'extract_feature_raw_shapecontext_all'}
+        param.feat_raw = imfeat_shapecontext_algo(param.image, cmd1, cmd2);
     otherwise
         warning('Unsupport cmd: %s',cmd1);
 end
 
 end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%ok
-% function [out] = imfeat_aspectratio_algo(I, cmd1, cmd2)
-% 
-% switch cmd1
-%     case 'compute_feature_raw_aspectratio_incrementally'
-%         box = imfeat_boundingbox_algo ...
-%               (I, 'compute_feature_raw_boundingbox_incrementally', cmd2{1});
-%     otherwise
-%         warning('Unsupport cmd: %s',cmd1);
-% end
-% w = box.x_max - box.x_min + 1;
-% h = box.y_max - box.y_min + 1;
-% out = w/h;
-% 
-% end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%....
-% function [out] = imfeat_compactness_algo(I, cmd1, cmd2)
-% 
-% switch cmd1
-%     case 'compute_feature_raw_compactness_incrementally'
-%         a = imfeat_size_algo ...
-%               (I, 'compute_feature_raw_size_incrementally', cmd2);
-%         p = imfeat_perimeter_algo ...
-%               (I, 'compute_feature_raw_perimeter_incrementally', cmd2);
-%     otherwise
-%         warning('Unsupport cmd: %s',cmd1);
-% end
-% out = sqrt(a)/p;
-% 
-% end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 
-% function [out] = imfeat_numofhole_algo(I, cmd1, cmd2)
-% 
-% switch cmd1
-%     case 'extract_feature_raw_numofhole_all'
-%         [L, N] = bwlabel(I, 4);
-%         if N == 1
-%             e = imfeat_eulerno_algo ...
-%                   (I, 'extract_feature_raw_eulerno_all', cmd2);
-%         else
-%             warning('cmd %d support single connected component only',cmd1);
-%         end
-%     case 'extract_feature_raw_numofhole_givenchkpt'
-%         e = imfeat_eulerno_algo ...
-%               (I, 'extract_feature_raw_eulerno_givenchkpt', cmd2);
-%     otherwise
-%         warning('Unsupport cmd: %s',cmd1);
-% end
-% out = 1-e;
-% 
-% end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -463,7 +401,7 @@ end
 
 function [out] = imfeat_convexhull_algo(I, cmd1, cmd2)
 
-if sum(sum(I,1)>0)==1 || sum(sum(I,2)>0)
+if sum(sum(I,1)>0)==1 || sum(sum(I,2)>0)==1
     out = sum(sum(I));
 else
     p = 1;
@@ -533,7 +471,7 @@ end
 function [out] = imfeat_reflectpointno_algo(I, cmd1, cmd2)
 
 % minimum segment/perimeter ratio that will take into account
-MIN_SEG2ALL_RATIO = 0.08;
+MIN_SEG2ALL_RATIO = 0.001;
 
 B = logical(I);
 [B, L] = bwboundaries(B,4,'noholes');
@@ -655,3 +593,266 @@ function loc = next_locates_at(cur_xy, nxt_xy)
     end
     
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function [out] = imfeat_shapecontext_algo(I, cmd1, cmd2)
+
+if isempty(cmd2)
+    % default values
+    nsamp = 50;
+    nbins_theta = 12;
+    nbins_r = 5;
+    r_inner = 1/8;
+    r_outer = 2;
+    show_plot = 0;
+else
+    nsamp = cmd2(1);
+    nbins_theta = cmd2(2);
+    nbins_r = cmd2(3);
+    r_inner = cmd2(4);
+    r_outer = cmd2(5); 
+    show_plot = cmd2(6);
+end
+
+I = padarray(I, [2 2]);
+[x,y,t] = sc_bdry_extract(I);
+nsamp1 = length(x);
+if nsamp1>=nsamp
+   [x,y,t] = sc_get_samples(x,y,t,nsamp);
+else
+   error('shape #1 doesn''t have enough samples')
+end
+Bsamp = [x y]';
+Tsamp = zeros(1,nsamp);
+mean_dist = [];
+out_vec = zeros(1,nsamp);
+[out, mean_dist] = sc_compute(Bsamp, Tsamp, mean_dist, nbins_theta, nbins_r, r_inner, r_outer, out_vec, show_plot);
+
+end
+
+function [x,y,t,c] = sc_bdry_extract(V)
+% [x,y,t,c]=bdry_extract_3(V);
+% compute (r,theta) histograms for points along boundary of single 
+% region in binary image V 
+if isequal(size(V),[64,7])
+    V = V;
+end
+% extract a set of boundary points w/oriented tangents
+%sig=1;
+%Vg=gauss_sig(V,sig);
+Vg=double(V); % if no smoothing is needed
+c=contourc(Vg,[.5 .5]);
+if isempty(c)
+    B = bwboundaries(Vg,4,'noholes');
+    c = B{1}';
+end
+[G1,G2]=gradient(Vg);
+
+% need to deal with multiple contours (for objects with holes)
+fz=c(1,:)~=0.5;
+c(:,find(~fz))=NaN;
+B=c(:,find(fz));
+
+npts=size(B,2);
+t=zeros(npts,1);
+for n=1:npts
+   x0=min(round(B(1,n)),size(Vg,2));
+   y0=min(round(B(2,n)),size(Vg,1));
+   t(n)=atan2(G2(y0,x0),G1(y0,x0))+pi/2;
+end
+
+x=B(1,:)';
+y=B(2,:)';
+
+end
+
+function [xi,yi,ti] = sc_get_samples(x,y,t,nsamp)
+% [xi,yi,ti]=get_samples_1(x,y,t,nsamp);
+%
+% uses Jitendra's sampling method
+
+N=length(x);
+k=3;
+Nstart=min(k*nsamp,N);
+
+ind0=randperm(N);
+ind0=ind0(1:Nstart);
+
+xi=x(ind0);
+yi=y(ind0);
+ti=t(ind0);
+xi=xi(:);
+yi=yi(:);
+ti=ti(:);
+
+d2=dist2([xi yi],[xi yi]);
+d2=d2+diag(Inf*ones(Nstart,1));
+
+s=1;
+while s
+   % find closest pair
+   [a,b]=min(d2);
+   [c,d]=min(a);
+   I=b(d);
+   J=d;
+   % remove one of the points
+   xi(J)=[];
+   yi(J)=[];
+   ti(J)=[];
+   d2(:,J)=[];
+   d2(J,:)=[];
+   if size(d2,1)==nsamp
+      s=0;
+   end
+end
+
+end
+
+function [BH,mean_dist] = sc_compute(Bsamp, Tsamp, mean_dist, nbins_theta, nbins_r, r_inner, r_outer, out_vec, show_plot)
+% [BH,mean_dist]=sc_compute(Bsamp,Tsamp,mean_dist,nbins_theta,nbins_r,r_inner,r_outer,out_vec);
+%
+% compute (r,theta) histograms for points along boundary 
+%
+% Bsamp is 2 x nsamp (x and y coords.)
+% Tsamp is 1 x nsamp (tangent theta)
+% out_vec is 1 x nsamp (0 for inlier, 1 for outlier)
+%
+% mean_dist is the mean distance, used for length normalization
+% if it is not supplied, then it is computed from the data
+%
+% outliers are not counted in the histograms, but they do get
+% assigned a histogram
+%
+
+nsamp=size(Bsamp,2);
+in_vec=out_vec==0;
+
+% compute r,theta arrays
+r_array=real(sqrt(dist2(Bsamp',Bsamp'))); % real is needed to
+                                          % prevent bug in Unix version
+theta_array_abs=atan2(Bsamp(2,:)'*ones(1,nsamp)-ones(nsamp,1)*Bsamp(2,:),Bsamp(1,:)'*ones(1,nsamp)-ones(nsamp,1)*Bsamp(1,:))';
+theta_array=theta_array_abs-Tsamp'*ones(1,nsamp);
+
+% create joint (r,theta) histogram by binning r_array and
+% theta_array
+
+% normalize distance by mean, ignoring outliers
+if isempty(mean_dist)
+   tmp=r_array(in_vec,:);
+   tmp=tmp(:,in_vec);
+   mean_dist=mean(tmp(:));
+end
+r_array_n=r_array/mean_dist;
+
+% use a log. scale for binning the distances
+r_bin_edges=logspace(log10(r_inner),log10(r_outer),5);
+r_array_q=zeros(nsamp,nsamp);
+for m=1:nbins_r
+   r_array_q=r_array_q+(r_array_n<r_bin_edges(m));
+end
+fz=r_array_q>0; % flag all points inside outer boundary
+
+% put all angles in [0,2pi) range
+theta_array_2 = rem(rem(theta_array,2*pi)+2*pi,2*pi);
+% quantize to a fixed set of angles (bin edges lie on 0,(2*pi)/k,...2*pi
+theta_array_q = 1+floor(theta_array_2/(2*pi/nbins_theta));
+
+nbins=nbins_theta*nbins_r;
+BH=zeros(nsamp,nbins);
+for n=1:nsamp
+   fzn=fz(n,:)&in_vec;
+   Sn=sparse(theta_array_q(n,fzn),r_array_q(n,fzn),1,nbins_theta,nbins_r);
+   BH(n,:)=Sn(:)';
+
+   if show_plot == 1
+    h = figure(1);  
+    axs = subplot(2,1,1);  
+    axis equal;  
+    point = [Bsamp(1,n) Bsamp(2,n)];  
+    sc_DrawPolar(Bsamp,point,r_inner*mean_dist,r_outer*mean_dist,nbins_theta,nbins_r);  
+    % draw 2d histogram  
+    subplot(2,1,2);  
+    axis equal;  
+    hold on;  
+
+    temp = flipud(full(Sn)');  
+    imagesc(temp);colormap(gray);  
+    axis image;  
+    xlabel('{/theta}');  
+    ylabel('log(r)');  
+    for i=1:size(temp,2)  
+        for j=1:size(temp,1)  
+            if temp(j,i)  
+                text(i,j,sprintf('%d',temp(j,i)),'Color','r');  
+            end  
+        end  
+    end  
+    hold off;  
+    %
+    pause;  
+    close(h);
+   end
+   
+end
+
+end
+
+function out = dist2(x, c)
+
+[ndata, dimx] = size(x);
+[ncentres, dimc] = size(c);
+if dimx ~= dimc
+	error('Data dimension does not match dimension of centres')
+end
+out = (ones(ncentres, 1) * sum((x.^2)', 1))' + ...
+  		ones(ndata, 1) * sum((c.^2)',1) - ...
+  		2.*(x*(c'));
+    
+end
+
+function sc_DrawPolar(samp,point,r_min,r_max,nbins_theta,nbins_r)
+%SCDRAWPOLAR draw a polar on the center point
+%   point           - the center point
+%   r_min           - min radius
+%   r_max           - max radius
+%   nbins_theta     - theta divide
+%   nbins_r         - r divide
+%   fig_handle      - draw the diagram on which figure
+gca;
+hold on;
+
+plot(samp(1,:)',samp(2,:)','r.');
+plot(point(1),point(2),'ko');
+
+r_bin_edges=logspace(log10(r_min),log10(r_max),nbins_r);
+
+% draw circles
+th = 0 : pi / 50 : 2 * pi;
+xunit = cos(th);
+yunit = sin(th);
+for i=1:length(r_bin_edges)
+    line(xunit * r_bin_edges(i) + point(1), ...
+                    yunit * r_bin_edges(i) + point(2), ...
+        'LineStyle', ':', 'Color', 'k', 'LineWidth', 1);
+end
+
+% draw spokes
+th = (1:nbins_theta) * 2*pi / nbins_theta;
+cs = [cos(th);zeros(1,size(th,2))];
+sn = [sin(th);zeros(1,size(th,2))];
+line(r_max*cs + point(1), r_max*sn + point(2),'LineStyle', ':', ...
+    'Color', 'k', 'LineWidth', 1);
+
+axis equal;
+axis off;
+hold off;
+
+end
+
+
+
+
+
+
+

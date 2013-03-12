@@ -17,12 +17,12 @@ function SWTImage = imfeat_swt_algo(Image)
 
 im = Image;
 edgeImage = edge(im,'canny');
-figure,imshow(edgeImage);
+% figure,imshow(edgeImage);
 
 [dx dy] = gradient(double(im));
 
 prec = 0.05;
-dark_on_light = 1;
+dark_on_light = 0;
 [row_image col_image] = size(im);
 flag = 0;
 cnt=1;
@@ -108,22 +108,23 @@ for row = 1:row_image
     end
 end
 % end
-figure,imagesc(SWTImage); colorbar;
+% figure,imagesc(SWTImage); colorbar;
+if exist('rays')
+    for i=1:length(rays)-1          %each rays
+        cnt1 = 1;
+        for j=1:length(rays(i).points)  %each points on the rays
+            xxx(cnt1) = SWTImage(rays(i).points(j).y,rays(i).points(j).x);
 
-for i=1:length(rays)-1          %each rays
-    cnt1 = 1;
-    for j=1:length(rays(i).points)  %each points on the rays
-        xxx(cnt1) = SWTImage(rays(i).points(j).y,rays(i).points(j).x);
-        
-        cnt1 = cnt1+1;
+            cnt1 = cnt1+1;
+        end
+        rays(i).med = median(xxx);
+
+        for j=1:length(rays(i).points)  %each points on the rays
+            SWTImage(rays(i).points(j).y,rays(i).points(j).x)= min(SWTImage(rays(i).points(j).y,rays(i).points(j).x),rays(i).med);
+        end    
     end
-    rays(i).med = median(xxx);
-    
-    for j=1:length(rays(i).points)  %each points on the rays
-        SWTImage(rays(i).points(j).y,rays(i).points(j).x)= min(SWTImage(rays(i).points(j).y,rays(i).points(j).x),rays(i).med);
-    end    
 end
-SWTImage(SWTImage == -1) = max( SWTImage(:) );
-figure,imagesc(SWTImage); colorbar;
+% SWTImage(SWTImage == -1) = max( SWTImage(:) );
+% figure,imagesc(SWTImage); colorbar;
 
 end

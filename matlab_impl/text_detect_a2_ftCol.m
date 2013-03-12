@@ -1,4 +1,4 @@
-function text_detect_a2_1stStage_ftCol(ch_file_name, nc_folder_name, nc_size, out_fn_tag)
+function text_detect_a2_ftCol(nc_ds, ch_file_name, nc_folder_name, nc_size, out_fn_tag)
 
 addpath_for_me;
 ds_char = [];
@@ -13,18 +13,27 @@ fv_char = ft_vector;
 no_char = size(fv_char, 1);
 
 % collect trained 'non-char' features
-ds_nonc = imdataset('init', 'ICDAR2003RobustReading', ds_nonc);
-ds_nonc = imdataset('get_train_dataset_defxml_char', '', ds_nonc);
+switch nc_ds
+    case 'ICDAR2003RobustReading'
+        ds_nonc = imdataset('init', 'ICDAR2003RobustReading', ds_nonc);
+        ds_nonc = imdataset('get_train_dataset_defxml_char', '', ds_nonc);
+    case 'MSRATD500'
+        ds_nonc = imdataset('init', 'MSRATD500', ds_nonc);
+        ds_nonc = imdataset('get_train_dataset_deftxt_word', '', ds_nonc);
+end
 fv_nonc = zeros(10000*2000,7);
 no_nonc = 0;
 for i=1:4:ds_nonc.no
     i
-    fn = util_changeFn(ds_nonc.fn_list{i}, 'cd .._with_filename', '');
-    fn = util_changeFn(fn, 'cd _with_filename', '_output_files');
-    fn = util_changeFn(fn, 'cd _with_filename', nc_folder_name);
+    file = util_changeFn(ds_nonc.fn_list{i}, 'get_filename_and_extension', '');
+    path = util_changeFn(ds_nonc.fn_list{i}, 'remove_filename_and_extension', '');
+    path = util_changeFn(path, 'cd ..', '');
+    path = util_changeFn(path, 'cd _mkdir', '_output_files');
+    path = util_changeFn(path, 'cd _mkdir', nc_folder_name);
     for ii=1:1
         ii
-        path_saved_mat = util_changeFn(fn, 'replace_extension', ...
+        path_saved_mat = [path '[' sprintf('%03d', i) '] ' file];
+        path_saved_mat = util_changeFn(path_saved_mat, 'replace_extension', ...
                          ['nc_' num2str(nc_size(1)) 'x' num2str(nc_size(2)) '_r0.' num2str(ii) '.mat']);
         if exist(path_saved_mat, 'file')
             % collect it

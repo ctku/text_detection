@@ -145,50 +145,6 @@ switch feat_name
 	case 'binary'
         im = imfeat('init', 'binary', im);
         
-        % aspect ratio (w/h) - incremental
-%         % prepare new info
-%         I_new = [1 1 0 0;
-%                  1 0 0 0;
-%                  0 0 0 1;
-%                  0 0 1 1];
-%         im = imfeat('set_image', I_new, im);
-%         % prepare extra info
-%         f_cum.x_min = 2;
-%         f_cum.x_max = 3;
-%         f_cum.y_min = 2;
-%         f_cum.y_max = 3;
-%         extra{1} = f_cum;
-%         r1 = imfeat('compute_feature_raw_aspectratio_incrementally', extra, im);
-%         assert(r1.feat_raw==1)
-        
-        % compactness (sqrt(a)/p) - incremental
-        % prepare new info
-%         I_new = [1 1 0 0;
-%                  1 0 0 0;
-%                  0 0 0 1;
-%                  0 0 1 1];
-%         im = imfeat('set_image', I_new, im);
-%         % prepare extra info
-%         I_cum = [0 0 0 0;
-%                  0 1 1 0;
-%                  0 1 1 0;
-%                  0 0 0 0];
-%         f_cum = 4;
-%         extra{1} = I_cum;
-%         extra{2} = f_cum;
-%         r1 = imfeat('compute_feature_raw_compactness_incrementally', extra, im);
-%         assert(r1.feat_raw==sqrt(10)/16)
-        
-        % number of holes (1-e)
-%         I = [0 0 0 0 0;
-%              1 1 1 1 0;
-%              1 0 1 0 0;
-%              1 1 1 1 0];
-%         im = imfeat('set_image', I, im);
-%         r1 = imfeat('extract_feature_raw_numofhole_all', '', im);
-%         r2 = imfeat('extract_feature_raw_numofhole_givenchkpt', [2 2], im);
-%         assert(r1.feat_raw==1 && r2.feat_raw==1)
-        
         % size
         I_new = [0 0 0 0 0;
                  1 1 0 0 0;
@@ -362,14 +318,14 @@ switch feat_name
         assert(r.feat_raw==2);
 
         % reflection points
-        I = [0 1 1 1 0;
-             1 1 0 1 1;
-             1 0 0 0 1;
-             1 1 0 1 1;
-             0 1 1 1 0];
+        I = [0 0 1 1 1 1 0 0;
+             0 0 1 0 0 1 0 0;
+             1 1 1 0 0 1 1 1;
+             1 0 0 0 0 0 0 1;
+             1 1 1 1 1 1 1 1];
         im = imfeat('set_image', uint8(I), im);
         r = imfeat('extract_feature_raw_reflectpointno_all', '', im);
-        assert(r.feat_raw==8);
+        assert(r.feat_raw==4);
         I = [0 1 1 1 0;
              0 1 0 1 0;
              0 1 1 1 0];
@@ -383,8 +339,32 @@ switch feat_name
         r = imfeat('extract_feature_raw_reflectpointno_all', '', im);
         assert(r.feat_raw==2);
 
+        % shape context
+        I = imread('..\..\..\..\Dataset\Chars74K\English\Fnt\Sample001\img001-00005.png');
+        im = imfeat('set_image', uint8(255-I), im);
+        im = imfeat('resize_no_keep_ar', [64 64], im);
+        r = imfeat('extract_feature_raw_shapecontext_all', [100 12 5 1/8 2], im);
+        assert(isequal(size(r.feat_raw),[100,60]));
+        
         result = 1;
-           
+        
+	case 'hog'
+        im = imfeat('init', 'hog', im);
+        I = imread('..\..\..\..\Dataset\Chars74K\English\Fnt\Sample001\img001-00005.png');
+        im = imfeat('set_image', uint8(I), im);
+        im = imfeat('resize', [32,32], im);
+        r = imfeat('extract_feature_raw', [4,4,9], im);
+        plot(r.feat_raw);
+        result = 1;
+        
+	case 'hiercentroid'
+        im = imfeat('init', 'hiercentroid', im);
+        I = imread('..\..\..\..\Dataset\Chars74K\English\Fnt\Sample001\img001-00005.png');
+        im = imfeat('set_image', uint8(I), im);
+        r = imfeat('extract_feature_raw', 1, im);
+        plot(r.feat_raw);
+        result = 1;
+        
     otherwise
         warning('Unsupported imfeat: %s', feat_name);
 end
