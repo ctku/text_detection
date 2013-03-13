@@ -6,7 +6,7 @@
 #define OUT
 
 #define MIN(x,y) ((x) < (y) ? (x) : (y))
-#define MAX(x,y) ((x) < (y) ? (x) : (y))
+#define MAX(x,y) ((x) > (y) ? (x) : (y))
 
 typedef unsigned char u8;
 typedef unsigned short int u16;

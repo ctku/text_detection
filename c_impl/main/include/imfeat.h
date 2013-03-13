@@ -28,7 +28,6 @@ typedef struct ER_t
 	int ER_id;
 	int ER_val;
 	int ER_size;
-	int ER_pxl_start;
 	int ER_parent;
 	int ER_firstChild;
 	int ER_nextSibling;
@@ -47,6 +46,6 @@ typedef struct ER_t
 ER_t;
 
 /* Provided feature API */
-extern void get_BoundingBox(IN p3_t pt, IN p4_t feat_in, OUT p4_t *feat_out);
+extern void get_BoundingBox(IN p4_t pt, IN p4_t feat_in, OUT p4_t *feat_out);
 
 #endif

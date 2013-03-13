@@ -554,7 +554,7 @@ static int extractMSER_8UC1_Pass( int* ioptr,
 int _get_ERs(
 			 CvMat *src,
 			 ER_t *ERs,
-			 int *pxl,
+			 LinkedPoint *pts,
 			 int reverse)
 {
 	int step = 8;
@@ -584,7 +584,6 @@ int _get_ERs(
 	heap_start[0] = heap;
 
 	// pre-allocate linked point buffer, node history
-	LinkedPoint* pts = (LinkedPoint*)malloc( src->rows*src->cols*sizeof(pts[0]) );
 	for (int i=0; i<(src->rows*src->cols); i++) {
 		ERs[i].val = -1;
 		ERs[i].size = -1;
@@ -609,7 +608,7 @@ int _get_ERs(
 	imgptr = preprocessMSER_8UC1( &img, heap_start, src, mask, reverse );
 	int no_ER = extractMSER_8UC1_Pass( ioptr, imgptr, heap_start, pts, ERs, comp, step, stepmask, stepgap, -1, contours );
 
-	// save pixel information into "pxl"
+	/* save pixel information into "pxl"
 	LinkedPoint *cur_pt = pts;
 	// find the first point
 	while (cur_pt->prev != NULL) {
@@ -620,7 +619,7 @@ int _get_ERs(
 		pxl[i] = cur_pt->pt.x + cur_pt->pt.y*src->cols;
 		cur_pt->pt_order = i;
 		cur_pt = cur_pt->next;
-	}
+	} */
 
 	// add root node
 	ER_t *root = &ERs[no_ER];
@@ -634,7 +633,7 @@ int _get_ERs(
 				root->ER_firstChild = i;
 				root->to_firstChild = cur;
 				root->ER_head = cur->ER_head;
-				while ( cur )
+				while (cur)
 				{
 					cur->ER_parent = root->ER_id;
 					cur->to_parent = root;
@@ -648,14 +647,8 @@ int _get_ERs(
 	root->ER_val = max_val;
 	no_ER ++;
 
-	// save pxl start idx
-	for (int i=0; i<no_ER; i++) {
-		ERs[i].ER_pxl_start = ERs[i].ER_head->pt_order;
-	}
-
 	// clean up
 	free(heap);
-	free(pts);
 	free(img_data);
 
 	return no_ER;
@@ -665,8 +658,8 @@ int get_ERs(
 			 u8 *img_data,
 			 int img_rows,
 			 int img_cols,
-			 ER_t* ERs,
-			 int *pxl,
+			 ER_t *ERs,
+			 LinkedPoint *pts,
 			 int reverse )
 {
     // use reverse plus 2 to indicate debug mode 
@@ -681,7 +674,7 @@ int get_ERs(
 	img.cols = img_cols;
 	img.step = img_cols;
 
-	return _get_ERs(&img, ERs, pxl, reverse);
+	return _get_ERs(&img, ERs, pts, reverse);
 }
 
 void ER_tree_traversal(ER_t *v)
@@ -710,43 +703,31 @@ int main_sample(void)
 	img_ptr[12] = 2; img_ptr[13] = 1; img_ptr[14] = 4; img_ptr[15] = 3;
 
 	ER_t* ERs = (ER_t *)malloc(img_rows*img_cols*sizeof(ERs[0]));
-	int* pxl = (int*)malloc((img_rows*img_cols)*sizeof(int));
+	LinkedPoint* pts = (LinkedPoint*)malloc(img_rows*img_cols*sizeof(pts[0]));
 
-	int no_ER = get_ERs(img_data, img_rows, img_cols, ERs, pxl, 0/*2:see debug msg*/);
+	int no_ER = get_ERs(img_data, img_rows, img_cols, ERs, pts, 0/*2:see debug msg*/);
 
 	//ER_tree_traversal(&ERs[no_ER-1]);
-	
-	u32* msk = (u32 *)malloc((int)ceil((double)no_ER/32)*sizeof(u32));
-	memset(msk, 0, ceil((double)no_ER/32)*sizeof(u32));
+	// bounding box
 	ER_t *ER_cur = &ERs[0];
 	ER_t *ER_nxt = &ERs[1];
-	int invalid_msk = 0;
-	for (int i=0; i<ER_nxt->ER_size; i++) {
-		if (i==ER_cur->ER_pxl_start) invalid_msk = 1;
-		if (i==ER_cur->ER_pxl_start+ER_cur->ER_size) invalid_msk = 0;
-		if (invalid_msk==0) {
-			int u32_idx = (int)floor((float)i/32);
-			msk[u32_idx] = msk[u32_idx] | (0x1<<(i%32));
-		}
-	}
-
 	p4_t pt;
-	pt.val[0] = (u32)pxl;
-	pt.val[1] = ER_nxt->ER_pxl_start;
-	pt.val[2] = ER_nxt->ER_size;
-	pt.val[3] = (u32)msk;
-	pt.val[4] = img_cols;
+	pt.val[0] = (u32)ER_nxt->ER_head;
+	pt.val[1] = ER_nxt->ER_size;
+	pt.val[2] = (u32)ER_cur->ER_head;
+	pt.val[3] = ER_cur->ER_size;
 	p4_t feat_in, feat_out;
-	feat_in.val[0] = feat_in.val[1] = feat_in.val[2] = feat_in.val[3] = -1;
+	feat_in.val[0] = feat_in.val[1] = feat_in.val[2] = feat_in.val[3] = 2;
 	get_BoundingBox(IN pt, IN feat_in, OUT &feat_out);
+
+
 	printf("this test is good\n");
 	char ch;
 	scanf("%c", &ch);
 
 
 	free(ERs);
-	free(pxl);
-	free(msk);
+	free(pts);
 
 	return 0;
 }
