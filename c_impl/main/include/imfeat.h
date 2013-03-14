@@ -14,10 +14,17 @@ Points;
 struct LinkedPoint;
 typedef struct LinkedPoint
 {
+	/* public used */
 	struct LinkedPoint* prev;
 	struct LinkedPoint* next;
+	struct LinkedPoint* l;
+	struct LinkedPoint* t;
+	struct LinkedPoint* r;
+	struct LinkedPoint* b;
 	struct Points pt;
-	int pt_order;
+
+	/* free to use */
+	int val;
 }
 LinkedPoint;
 
@@ -36,16 +43,18 @@ typedef struct ER_t
 	struct ER_t* to_firstChild;
 	struct ER_t* to_nextSibling;
 	struct ER_t* to_prevSibling;
-
-	/* private used */
 	LinkedPoint* ER_head;
 	LinkedPoint* ER_tail;
+
+	/* free to use after get_ERs */
 	int val;
 	int size;
 }
 ER_t;
 
 /* Provided feature API */
+extern int get_ERs(IN u8 *img_data, IN int img_rows, IN int img_cols, IN int reverse, OUT ER_t *ERs, OUT LinkedPoint *pts);
 extern void get_BoundingBox(IN p4_t pt, IN p4_t feat_in, OUT p4_t *feat_out);
+extern void get_Perimeter(IN p4_t pt, IN p1_t feat_in, OUT p1_t *feat_out);
 
 #endif

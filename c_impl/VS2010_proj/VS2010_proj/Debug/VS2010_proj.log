@@ -1,25 +1,24 @@
-﻿Build started 2013/3/13 上午 02:56:18.
-     1>Project "D:\[Dropbox]\Dropbox\KCD_Research\Codes\text_detection\c_impl\VS2010_proj\VS2010_proj\VS2010_proj.vcxproj" on node 2 (build target(s)).
+﻿Build started 3/13/2013 9:48:54 PM.
+     1>Project "C:\Users\ctku\Dropbox_ku.chung.ta\Dropbox\KCD_Research\Codes\text_detection\c_impl\VS2010_proj\VS2010_proj\VS2010_proj.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
          Creating "Debug\VS2010_proj.unsuccessfulbuild" because "AlwaysCreate" was specified.
        ClCompile:
-         D:\Program Files\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /I"D:\Program Files\Opencv_2.4.4\opencv\include\opencv" /I"D:\Program Files\Opencv_2.4.4\opencv\include" /I"D:\Program Files\Opencv_2.4.4\opencv\include\opencv2" /ZI /nologo /W3 /WX- /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt ..\..\main\src\imfeat\imfeat_ertree_get_ERs_c.cpp
-         imfeat_ertree_get_ERs_c.cpp
-     1>d:\[dropbox]\dropbox\kcd_research\codes\text_detection\c_impl\main\src\imfeat\imfeat_ertree_get_ers_c.cpp(723): warning C4996: 'scanf': This function or variable may be unsafe. Consider using scanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-                 d:\program files\microsoft visual studio 10.0\vc\include\stdio.h(304) : see declaration of 'scanf'
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /I"C:\Users\ctku\Program Files\Opencv_2.4.4\opencv\include\opencv" /I"C:\Users\ctku\Program Files\Opencv_2.4.4\opencv\include" /I"C:\Users\ctku\Program Files\Opencv_2.4.4\opencv\include\opencv2" /ZI /nologo /W3 /WX- /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt ..\..\main\src\imfeat\imfeat_binary_get_Perimeter.cpp
+         imfeat_binary_get_Perimeter.cpp
        Link:
-         D:\Program Files\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"D:\[Dropbox]\Dropbox\KCD_Research\Codes\text_detection\c_impl\VS2010_proj\Debug\VS2010_proj.exe" /NOLOGO /LIBPATH:"D:\Program Files\Opencv_2.4.4\opencv\lib" kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib opencv_core244d.lib opencv_highgui244d.lib opencv_calib3d244d.lib opencv_contrib244d.lib opencv_features2d244d.lib opencv_flann244d.lib opencv_imgproc244d.lib opencv_ml244d.lib opencv_objdetect244d.lib opencv_ts244d.lib opencv_legacy244d.lib opencv_video244d.lib opencv_nonfree244d.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\VS2010_proj.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"D:\[Dropbox]\Dropbox\KCD_Research\Codes\text_detection\c_impl\VS2010_proj\Debug\VS2010_proj.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\[Dropbox]\Dropbox\KCD_Research\Codes\text_detection\c_impl\VS2010_proj\Debug\VS2010_proj.lib" /MACHINE:X86 Debug\imfeat_binary_get_BoundingBox.obj
-         Debug\imfeat_ertree_get_ERs_c.obj
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\ctku\Dropbox_ku.chung.ta\Dropbox\KCD_Research\Codes\text_detection\c_impl\VS2010_proj\Debug\VS2010_proj.exe" /NOLOGO /LIBPATH:"C:\Users\ctku\Program Files\Opencv_2.4.4\opencv\lib" kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib opencv_core244d.lib opencv_highgui244d.lib opencv_calib3d244d.lib opencv_contrib244d.lib opencv_features2d244d.lib opencv_flann244d.lib opencv_imgproc244d.lib opencv_ml244d.lib opencv_objdetect244d.lib opencv_ts244d.lib opencv_legacy244d.lib opencv_video244d.lib opencv_nonfree244d.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\VS2010_proj.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"C:\Users\ctku\Dropbox_ku.chung.ta\Dropbox\KCD_Research\Codes\text_detection\c_impl\VS2010_proj\Debug\VS2010_proj.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\ctku\Dropbox_ku.chung.ta\Dropbox\KCD_Research\Codes\text_detection\c_impl\VS2010_proj\Debug\VS2010_proj.lib" /MACHINE:X86 Debug\imfeat_binary_get_BoundingBox.obj
+         Debug\imfeat_binary_get_Perimeter.obj
+         Debug\imfeat_ertree_get_ERs.obj
          Debug\main.obj
-         LINK : D:\[Dropbox]\Dropbox\KCD_Research\Codes\text_detection\c_impl\VS2010_proj\Debug\VS2010_proj.exe not found or not built by the last incremental link; performing full link
-         VS2010_proj.vcxproj -> D:\[Dropbox]\Dropbox\KCD_Research\Codes\text_detection\c_impl\VS2010_proj\Debug\VS2010_proj.exe
+         LINK : C:\Users\ctku\Dropbox_ku.chung.ta\Dropbox\KCD_Research\Codes\text_detection\c_impl\VS2010_proj\Debug\VS2010_proj.exe not found or not built by the last incremental link; performing full link
+         VS2010_proj.vcxproj -> C:\Users\ctku\Dropbox_ku.chung.ta\Dropbox\KCD_Research\Codes\text_detection\c_impl\VS2010_proj\Debug\VS2010_proj.exe
        Manifest:
-         C:\Program Files\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /outputresource:"D:\[Dropbox]\Dropbox\KCD_Research\Codes\text_detection\c_impl\VS2010_proj\Debug\VS2010_proj.exe;#1" /manifest Debug\VS2010_proj.exe.intermediate.manifest
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /outputresource:"C:\Users\ctku\Dropbox_ku.chung.ta\Dropbox\KCD_Research\Codes\text_detection\c_impl\VS2010_proj\Debug\VS2010_proj.exe;#1" /manifest Debug\VS2010_proj.exe.intermediate.manifest
        FinalizeBuildStatus:
          Deleting file "Debug\VS2010_proj.unsuccessfulbuild".
          Touching "Debug\VS2010_proj.lastbuildstate".
-     1>Done Building Project "D:\[Dropbox]\Dropbox\KCD_Research\Codes\text_detection\c_impl\VS2010_proj\VS2010_proj\VS2010_proj.vcxproj" (build target(s)).
+     1>Done Building Project "C:\Users\ctku\Dropbox_ku.chung.ta\Dropbox\KCD_Research\Codes\text_detection\c_impl\VS2010_proj\VS2010_proj\VS2010_proj.vcxproj" (build target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:02.05
+Time Elapsed 00:00:00.63

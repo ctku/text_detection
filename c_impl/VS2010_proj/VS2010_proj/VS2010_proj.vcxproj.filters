@@ -23,13 +23,16 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\main\src\imfeat\imfeat_ertree_get_ERs_c.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\main\src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\main\src\imfeat\imfeat_binary_get_BoundingBox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\main\src\imfeat\imfeat_ertree_get_ERs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\main\src\imfeat\imfeat_binary_get_Perimeter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

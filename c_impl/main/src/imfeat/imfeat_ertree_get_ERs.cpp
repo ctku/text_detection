@@ -55,9 +55,11 @@
  *
  *=================================================================*/
 
+#include "../../include/system.h"
 #include "../../include/imfeat.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/features2d/features2d.hpp>
@@ -384,7 +386,8 @@ static int extractMSER_8UC1_Pass( int* ioptr,
 			  int stepmask,
 			  int stepgap,
 			  int color,
-			  CvSeq* contours )
+			  CvSeq* contours,
+			  LinkedPoint *pts_map)
 {
 	//kevin added
 	for ( int i = 0; i < 256; i++ )
@@ -458,7 +461,9 @@ static int extractMSER_8UC1_Pass( int* ioptr,
 		int i = (int)(imgptr-ioptr);
 		ptsptr->pt.x = i&stepmask;
 		ptsptr->pt.y = i>>stepgap;
-		ptsptr->pt_order = 0;
+		ptsptr->val = 0;
+		u32 *ptsmap_ptr = (u32 *)pts_map;
+		memcpy(&ptsmap_ptr[i+step+1], &ptsptr, sizeof(u32));
 		//ptsptr->pt = cvPoint( i&stepmask, i>>stepgap ); // from index i to coordinate (x,y)
 
 		debug_print("put point (%d,%d) %d into cmp %d\n", i&stepmask, i>>stepgap, (*imgptr)&0xff, (comptr-cmp_start));
@@ -552,12 +557,12 @@ static int extractMSER_8UC1_Pass( int* ioptr,
 int _get_ERs(
 			 CvMat *src,
 			 ER_t *ERs,
-			 int *pxl,
+			 LinkedPoint *pts,
 			 int reverse)
 {
 	int step = 8;
 	int stepgap = 3;
-	while ( step < src->step+2 )
+	while (step < src->step+2)
 	{
 		step <<= 1;
 		stepgap++;
@@ -566,7 +571,7 @@ int _get_ERs(
 
 	// to speedup the process, make the width to be 2^N
 	CvMat img;// = cvCreateMat( src->rows+2, step, CV_32SC1 );
-	int* img_data = (int*)malloc( (src->rows+2)*step*sizeof(int) );
+	int* img_data = (int*)malloc((src->rows+2)*step*sizeof(int));
 	img.rows = src->rows+2;
 	img.cols = step;
 	img.step = step;
@@ -577,12 +582,13 @@ int _get_ERs(
 	int* imgptr;
 
 	// pre-allocate boundary heap
-	int** heap = (int**)malloc( (src->rows*src->cols+256)*sizeof(heap[0]) );
+	int** heap = (int **)malloc((src->rows*src->cols+256)*sizeof(heap[0]));
 	int** heap_start[256];
 	heap_start[0] = heap;
 
-	// pre-allocate linked point buffer, node history
-	LinkedPoint* pts = (LinkedPoint*)malloc( src->rows*src->cols*sizeof(pts[0]) );
+	// pre-allocate point map buffer, used for assigning pts' l,r,t,b
+	LinkedPoint *pts_map = (LinkedPoint *)malloc((src->rows+2)*step*sizeof(LinkedPoint *));
+	memset(pts_map, 0, (src->rows+2)*step*sizeof(LinkedPoint *));
 	for (int i=0; i<(src->rows*src->cols); i++) {
 		ERs[i].val = -1;
 		ERs[i].size = -1;
@@ -605,22 +611,9 @@ int _get_ERs(
 	CvSeq* contours = 0;
 	MSERConnectedComp comp[257];
 	imgptr = preprocessMSER_8UC1( &img, heap_start, src, mask, reverse );
-	int no_ER = extractMSER_8UC1_Pass( ioptr, imgptr, heap_start, pts, ERs, comp, step, stepmask, stepgap, -1, contours );
+	int no_ER = extractMSER_8UC1_Pass( ioptr, imgptr, heap_start, pts, ERs, comp, step, stepmask, stepgap, -1, contours, pts_map);
 
-	// save pixel information into "pxl"
-	LinkedPoint *cur_pt = pts;
-	// find the first point
-	while (cur_pt->prev != NULL) {
-		cur_pt++;
-	}
-	// save by order from the first point
-	for (int i=0; cur_pt!=NULL; i++) {
-		pxl[i] = cur_pt->pt.x + cur_pt->pt.y*src->cols;
-		cur_pt->pt_order = i;
-		cur_pt = cur_pt->next;
-	}
-
-	/* add root node */
+	// add root node
 	ER_t *root = &ERs[no_ER];
 	root->ER_id = no_ER;
 	root->ER_size = src->rows*src->cols;
@@ -631,7 +624,8 @@ int _get_ERs(
 				ER_t* cur = &ERs[i];
 				root->ER_firstChild = i;
 				root->to_firstChild = cur;
-				while ( cur )
+				root->ER_head = cur->ER_head;
+				while (cur)
 				{
 					cur->ER_parent = root->ER_id;
 					cur->to_parent = root;
@@ -645,21 +639,33 @@ int _get_ERs(
 	root->ER_val = max_val;
 	no_ER ++;
 
+	// add l,t,r,b ptr for each point
+	u32 *ptsmap_ptr = (u32 *)pts_map;
+	for (int i=step; i<(src->rows+2)*step; i++) {
+		LinkedPoint *cur_pt = (LinkedPoint *)ptsmap_ptr[i];
+		if (cur_pt!=NULL) {
+			cur_pt->l = (LinkedPoint *)ptsmap_ptr[i-1];
+			cur_pt->r = (LinkedPoint *)ptsmap_ptr[i+1];
+			cur_pt->t = (LinkedPoint *)ptsmap_ptr[i-step];
+			cur_pt->b = (LinkedPoint *)ptsmap_ptr[i+step];
+		}
+	}
+
 	// clean up
-	free( heap );
-	free( pts );
-	free( img_data );
+	free(heap);
+	free(img_data);
+	free(pts_map);
 
 	return no_ER;
 }
 
 int get_ERs(
-			 u8 *img_data,
-			 int img_rows,
-			 int img_cols,
-			 ER_t* ERs,
-			 int *pxl,
-			 int reverse )
+			 IN u8 *img_data,
+			 IN int img_rows,
+			 IN int img_cols,
+			 IN int reverse,
+			 OUT ER_t *ERs,
+			 OUT LinkedPoint *pts)
 {
     // use reverse plus 2 to indicate debug mode 
     if (reverse>=2) {
@@ -673,7 +679,7 @@ int get_ERs(
 	img.cols = img_cols;
 	img.step = img_cols;
 
-	return _get_ERs(&img, ERs, pxl, reverse);
+	return _get_ERs(&img, ERs, pts, reverse);
 }
 
 void ER_tree_traversal(ER_t *v)
@@ -689,6 +695,7 @@ void ER_tree_traversal(ER_t *v)
 	}
 }
 
+
 int main_sample(void) 
 {
 	int img_cols = 4;
@@ -700,19 +707,37 @@ int main_sample(void)
 	img_ptr[8] =  3; img_ptr[9] =  3; img_ptr[10] = 4; img_ptr[11] = 4;
 	img_ptr[12] = 2; img_ptr[13] = 1; img_ptr[14] = 4; img_ptr[15] = 3;
 
-	ER_t* ERs = (ER_t*)malloc(img_rows*img_cols*sizeof(ERs[0]));
-	int* pxl = (int*)malloc( (img_rows*img_cols)*sizeof(int) );
+	ER_t* ERs = (ER_t *)malloc(img_rows*img_cols*sizeof(ERs[0]));
+	LinkedPoint* pts = (LinkedPoint*)malloc(img_rows*img_cols*sizeof(pts[0]));
 
-	int no_ER = get_ERs(img_data, img_rows, img_cols, ERs, pxl, 0/*2:see debug msg*/);
+	int no_ER = get_ERs(img_data, img_rows, img_cols, 0/*2:see debug msg*/, ERs, pts);
 
-	ER_tree_traversal(&ERs[no_ER-1]);
+	ER_t *ER_cur = &ERs[0];
+	ER_t *ER_nxt = &ERs[1];
+	p4_t pt;
+	pt.val[0] = (u32)ER_nxt->ER_head;
+	pt.val[1] = ER_nxt->ER_size;
+	pt.val[2] = (u32)ER_cur->ER_head;
+	pt.val[3] = ER_cur->ER_size;
 
+	// bounding box
+	p4_t featBB_in, featBB_out;
+	featBB_in.val[0] = featBB_in.val[1] = featBB_in.val[2] = featBB_in.val[3] = 2;
+	get_BoundingBox(IN pt, IN featBB_in, OUT &featBB_out);
+
+	// perimeter
+	p1_t featPR_in, featPR_out;
+	featPR_in.val[0] = 4;
+	get_Perimeter(IN pt, IN featPR_in, OUT &featPR_out);
+
+	//ER_tree_traversal(&ERs[no_ER-1]);
 	printf("this test is good\n");
 	char ch;
 	scanf("%c", &ch);
 
-	free(ERs);
-	free(pxl);
 
+	free(ERs);
+	free(pts);
+	
 	return 0;
 }

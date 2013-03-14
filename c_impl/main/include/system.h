@@ -12,6 +12,11 @@ typedef unsigned char u8;
 typedef unsigned short int u16;
 typedef unsigned long int u32;
 
+typedef struct p1_t
+{
+	u32 val[1];
+} p1_t;
+
 typedef struct p2_t
 {
 	u32 val[2];
