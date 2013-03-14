@@ -13,11 +13,15 @@
   <ItemGroup>
     <ClInclude Include="..\..\main\include\imfeat.h" />
     <ClInclude Include="..\..\main\include\system.h" />
+    <ClInclude Include="..\..\main\src\imfeat\imfeat_internal.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\main\src\imfeat\imfeat_binary_get_BoundingBox.cpp" />
+    <ClCompile Include="..\..\main\src\imfeat\imfeat_binary_get_EulerNo.cpp" />
+    <ClCompile Include="..\..\main\src\imfeat\imfeat_binary_get_HzCrossing.cpp" />
     <ClCompile Include="..\..\main\src\imfeat\imfeat_binary_get_Perimeter.cpp" />
     <ClCompile Include="..\..\main\src\imfeat\imfeat_ertree_get_ERs.cpp" />
+    <ClCompile Include="..\..\main\src\imfeat\imfeat_util.cpp" />
     <ClCompile Include="..\..\main\src\main.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

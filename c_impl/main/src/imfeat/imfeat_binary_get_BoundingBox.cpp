@@ -1,10 +1,11 @@
 
 #include "../../include/system.h"
 #include "../../include/imfeat.h"
+#include "imfeat_internal.h"
 #include <stdio.h>
 #include <stdlib.h>
 
-void get_BoundingBox(IN p4_t pt, IN p4_t feat_in, OUT p4_t *feat_out)
+void get_BoundingBox(IN p7_t pt, IN p4_t feat_in, OUT p4_t *feat_out)
 {
 	LinkedPoint *pt_all_start = (LinkedPoint *)pt.val[0];
 	int pt_all_no = pt.val[1];
@@ -25,7 +26,6 @@ void get_BoundingBox(IN p4_t pt, IN p4_t feat_in, OUT p4_t *feat_out)
 	for (int i=0; i<pt_all_no; i++, cur=cur->next) {
 		if (cur==pt_inv_start) invalid = 1;
 		if (invalid==0) {
-			// process each new added pixels here
 			l = MIN(l, cur->pt.x);
 			t = MIN(t, cur->pt.y);
 			r = MAX(r, cur->pt.x);

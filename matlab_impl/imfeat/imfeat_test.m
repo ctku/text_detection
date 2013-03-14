@@ -325,7 +325,7 @@ switch feat_name
              1 1 1 1 1 1 1 1];
         im = imfeat('set_image', uint8(I), im);
         r = imfeat('extract_feature_raw_reflectpointno_all', '', im);
-        assert(r.feat_raw==4);
+        assert(r.feat_raw==0);
         I = [0 1 1 1 0;
              0 1 0 1 0;
              0 1 1 1 0];
@@ -340,7 +340,7 @@ switch feat_name
         assert(r.feat_raw==2);
 
         % shape context
-        I = imread('..\..\..\..\Dataset\Chars74K\English\Fnt\Sample001\img001-00005.png');
+        I = imread('..\..\..\..\..\Dataset\Chars74K\English\Fnt\Sample001\img001-00005.png');
         im = imfeat('set_image', uint8(255-I), im);
         im = imfeat('resize_no_keep_ar', [64 64], im);
         r = imfeat('extract_feature_raw_shapecontext_all', [100 12 5 1/8 2], im);

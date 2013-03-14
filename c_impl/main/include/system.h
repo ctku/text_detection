@@ -37,4 +37,14 @@ typedef struct p5_t
 	u32 val[5];
 } p5_t;
 
+typedef struct p6_t
+{
+	u32 val[6];
+} p6_t;
+
+typedef struct p7_t
+{
+	u32 val[7];
+} p7_t;
+
 #endif

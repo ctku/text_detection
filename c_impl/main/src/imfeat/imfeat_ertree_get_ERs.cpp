@@ -57,6 +57,7 @@
 
 #include "../../include/system.h"
 #include "../../include/imfeat.h"
+#include "imfeat_internal.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -639,15 +640,29 @@ int _get_ERs(
 	root->ER_val = max_val;
 	no_ER ++;
 
+	// create dummy pt for boundary case
+	LinkedPoint *dummy_pt = &pts[src->rows*src->cols];
+	dummy_pt->l = dummy_pt; dummy_pt->t = dummy_pt;
+	dummy_pt->r = dummy_pt; dummy_pt->b = dummy_pt;
+	dummy_pt->pt.x = -1; dummy_pt->pt.y = -1;
+	dummy_pt->val = PXL_IMG_EDG;
+
 	// add l,t,r,b ptr for each point
 	u32 *ptsmap_ptr = (u32 *)pts_map;
-	for (int i=step; i<(src->rows+2)*step; i++) {
-		LinkedPoint *cur_pt = (LinkedPoint *)ptsmap_ptr[i];
+	LinkedPoint *cur_pt, *row_1st_pt;
+	for (int i=0; i<(src->rows+2)*step; i++) {
+		cur_pt = (LinkedPoint *)ptsmap_ptr[i];
 		if (cur_pt!=NULL) {
-			cur_pt->l = (LinkedPoint *)ptsmap_ptr[i-1];
-			cur_pt->r = (LinkedPoint *)ptsmap_ptr[i+1];
-			cur_pt->t = (LinkedPoint *)ptsmap_ptr[i-step];
-			cur_pt->b = (LinkedPoint *)ptsmap_ptr[i+step];
+			cur_pt->l = ptsmap_ptr[i-1]==NULL ? dummy_pt : (LinkedPoint *)ptsmap_ptr[i-1];
+			cur_pt->r = ptsmap_ptr[i+1]==NULL ? dummy_pt : (LinkedPoint *)ptsmap_ptr[i+1];
+			cur_pt->t = ptsmap_ptr[i-step]==NULL ? dummy_pt : (LinkedPoint *)ptsmap_ptr[i-step];
+			cur_pt->b = ptsmap_ptr[i+step]==NULL ? dummy_pt : (LinkedPoint *)ptsmap_ptr[i+step];
+			if (cur_pt->l==dummy_pt && cur_pt->r!=dummy_pt)
+				row_1st_pt = cur_pt;
+			if (cur_pt->l!=dummy_pt && cur_pt->r==dummy_pt)
+				row_1st_pt = NULL;
+			if (row_1st_pt!=NULL)
+				cur_pt->prev = row_1st_pt; //overwrite prev as row_1st_pt for each data pt
 		}
 	}
 
@@ -708,27 +723,47 @@ int main_sample(void)
 	img_ptr[12] = 2; img_ptr[13] = 1; img_ptr[14] = 4; img_ptr[15] = 3;
 
 	ER_t* ERs = (ER_t *)malloc(img_rows*img_cols*sizeof(ERs[0]));
-	LinkedPoint* pts = (LinkedPoint*)malloc(img_rows*img_cols*sizeof(pts[0]));
+	LinkedPoint* pts = (LinkedPoint*)malloc((img_rows*img_cols+1)*sizeof(pts[0]));
 
 	int no_ER = get_ERs(img_data, img_rows, img_cols, 0/*2:see debug msg*/, ERs, pts);
 
 	ER_t *ER_cur = &ERs[0];
 	ER_t *ER_nxt = &ERs[1];
-	p4_t pt;
+	p7_t pt;
 	pt.val[0] = (u32)ER_nxt->ER_head;
 	pt.val[1] = ER_nxt->ER_size;
 	pt.val[2] = (u32)ER_cur->ER_head;
 	pt.val[3] = ER_cur->ER_size;
+	pt.val[4] = (u32)pts;
+	pt.val[5] = img_rows;
+	pt.val[6] = img_cols;
 
 	// bounding box
-	p4_t featBB_in, featBB_out;
+	p4_t featBB_in, featBB_o;
 	featBB_in.val[0] = featBB_in.val[1] = featBB_in.val[2] = featBB_in.val[3] = 2;
-	get_BoundingBox(IN pt, IN featBB_in, OUT &featBB_out);
+	get_BoundingBox(IN pt, IN featBB_in, OUT &featBB_o);
 
 	// perimeter
-	p1_t featPR_in, featPR_out;
-	featPR_in.val[0] = 4;
-	get_Perimeter(IN pt, IN featPR_in, OUT &featPR_out);
+	p1_t featPR_i, featPR_o;
+	featPR_i.val[0] = 4;
+	get_Perimeter(IN pt, IN featPR_i, OUT &featPR_o);
+
+	// euler no
+	p1_t featEN_i, featEN_o;
+	featEN_i.val[0] = 1;
+	get_EulerNo(IN pt, IN featEN_i, OUT &featEN_o);
+
+	// euler horizontal crossig
+	p1_t featHC_i, featHC_o;
+	int *feathc_i = (int *)malloc(img_rows*sizeof(int));
+	int *feathc_o = (int *)malloc(img_rows*sizeof(int));
+	memset(feathc_i, 0, img_rows*sizeof(int)); feathc_i[0] = 2;
+	memset(feathc_o, 0, img_rows*sizeof(int));
+	featHC_i.val[0] = (u32)feathc_i; 
+	featHC_o.val[0] = (u32)feathc_o;
+	get_HzCrossing(IN pt, IN featHC_i, OUT &featHC_o);
+
+
 
 	//ER_tree_traversal(&ERs[no_ER-1]);
 	printf("this test is good\n");

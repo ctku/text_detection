@@ -21,6 +21,9 @@
     <ClInclude Include="..\..\main\include\system.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\main\src\imfeat\imfeat_internal.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\main\src\main.cpp">
@@ -33,6 +36,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\main\src\imfeat\imfeat_binary_get_Perimeter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\main\src\imfeat\imfeat_binary_get_EulerNo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\main\src\imfeat\imfeat_util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\main\src\imfeat\imfeat_binary_get_HzCrossing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
